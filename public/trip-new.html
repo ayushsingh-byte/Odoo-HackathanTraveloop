@@ -5,29 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Traveloop — Plan a New Trip</title>
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/api.js"></script>
+  <script src="js/layout.js"></script>
 </head>
-<body>
+<body data-page="new-trip">
 
-<nav class="navbar">
-  <div class="container navbar-inner">
-    <a href="/dashboard.html" class="navbar-brand">✈ Traveloop</a>
-    <ul class="navbar-nav">
-      <li><a href="/dashboard.html">Home</a></li>
-      <li><a href="/trips.html">My Trips</a></li>
-      <li><a href="/cities.html">Explore</a></li>
-      <li><a href="/profile.html" id="nav-user">Profile</a></li>
-      <li><button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button></li>
-    </ul>
+<div id="__main" class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Plan a New Trip</span>
+    <div class="topbar-actions"></div>
   </div>
-</nav>
-
+  <div class="page-wrap">
+    <div id="alert" class="alert" style="display:none;"></div>
 <div class="container" style="max-width:640px">
   <div class="page-header">
     <h1>Plan a New Trip</h1>
     <p>Give your adventure a name and dates to get started</p>
   </div>
 
-  <div id="alert" class="alert" style="display:none;"></div>
+  
 
   <div class="card">
     <div class="card-body">
@@ -85,7 +81,7 @@
   </div>
 </div>
 
-<script src="js/api.js"></script>
+
 <script>
   (async () => {
     const user = await checkAuth();
@@ -116,11 +112,7 @@
     if (data.error) return showAlert(data.error);
     window.location.href = `/trip-builder.html?id=${data.trip_id}`;
   }
-
-  async function logout() {
-    await API.post('/api/auth/logout', {});
-    window.location.href = 'index.html';
-  }
 </script>
+  </div>
+</div>
 </body>
-</html>

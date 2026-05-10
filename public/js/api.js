@@ -6,7 +6,7 @@ const API = {
       ...options
     });
     if (res.status === 401) {
-      window.location.href = '/index.html';
+      window.location.href = 'index.html';
       return;
     }
     return res.json();
@@ -48,7 +48,7 @@ function spinner() {
 async function checkAuth() {
   const data = await API.get('/api/auth/me');
   if (!data || data.error) {
-    window.location.href = '/index.html';
+    window.location.href = 'index.html';
     return null;
   }
   return data.user;

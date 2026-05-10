@@ -5,28 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Traveloop — Profile</title>
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/api.js"></script>
+  <script src="js/layout.js"></script>
 </head>
-<body>
+<body data-page="profile">
 
-<nav class="navbar">
-  <div class="container navbar-inner">
-    <a href="/dashboard.html" class="navbar-brand">✈ Traveloop</a>
-    <ul class="navbar-nav">
-      <li><a href="/dashboard.html">Home</a></li>
-      <li><a href="/trips.html">My Trips</a></li>
-      <li><a href="/cities.html">Explore</a></li>
-      <li><a href="/profile.html" class="active" id="nav-user">Profile</a></li>
-      <li><button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button></li>
-    </ul>
+<div id="__main" class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Profile & Settings</span>
+    <div class="topbar-actions"></div>
   </div>
-</nav>
-
+  <div class="page-wrap">
+    <div id="alert" class="alert" style="display:none;"></div>
 <div class="container" style="max-width:640px">
   <div class="page-header">
     <h1>Profile & Settings</h1>
   </div>
 
-  <div id="alert" class="alert" style="display:none;"></div>
+  
 
   <div class="card mb-3">
     <div class="card-body">
@@ -49,6 +45,24 @@
           <input type="email" id="f-email" class="form-control" required>
         </div>
         <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input type="tel" id="f-phone" class="form-control" placeholder="+1 555 000 0000">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+          <div class="form-group">
+            <label class="form-label">City</label>
+            <input type="text" id="f-city" class="form-control" placeholder="New York">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Country</label>
+            <input type="text" id="f-country" class="form-control" placeholder="USA">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Additional Info</label>
+          <textarea id="f-info" class="form-control" rows="2" placeholder="Frequent traveler, photographer..."></textarea>
+        </div>
+        <div class="form-group">
           <label class="form-label">New Password <span class="text-muted">(leave blank to keep current)</span></label>
           <input type="password" id="f-password" class="form-control" placeholder="••••••••" minlength="6">
         </div>
@@ -64,16 +78,24 @@
     </div>
   </div>
 
+  <div class="card mb-3" id="admin-card" style="display:none;border:1.5px solid #ede9ff">
+    <div class="card-body">
+      <h3 style="color:#6c63ff;margin-bottom:0.5rem">Admin Access</h3>
+      <p class="text-muted mb-2">Manage users, view analytics, and platform stats.</p>
+      <a href="admin.html" class="btn btn-primary">Open Admin Panel</a>
+    </div>
+  </div>
+
   <div class="card" style="border:1.5px solid #fee2e2">
     <div class="card-body">
       <h3 style="color:#ef4444;margin-bottom:0.5rem">Danger Zone</h3>
       <p class="text-muted mb-2">Logging out will end your current session.</p>
-      <button class="btn btn-danger" onclick="logout()">Logout</button>
+      <button class="btn btn-danger" onclick="_layoutLogout()">Logout</button>
     </div>
   </div>
 </div>
 
-<script src="js/api.js"></script>
+
 <script>
   let currentUser;
 
@@ -87,8 +109,15 @@
     document.getElementById('profile-name').textContent  = user.name;
     document.getElementById('profile-email').textContent = user.email;
     document.getElementById('profile-role').textContent  = user.role;
-    document.getElementById('f-name').value  = user.name;
-    document.getElementById('f-email').value = user.email;
+    if (user.role === 'admin') document.getElementById('admin-card').style.display = 'block';
+    const profileData = await API.get('/api/auth/me');
+    const fullUser = profileData.user || user;
+    document.getElementById('f-name').value    = fullUser.name;
+    document.getElementById('f-email').value   = fullUser.email;
+    document.getElementById('f-phone').value   = fullUser.phone || '';
+    document.getElementById('f-city').value    = fullUser.city_name || '';
+    document.getElementById('f-country').value = fullUser.country_name || '';
+    document.getElementById('f-info').value    = fullUser.additional_info || '';
 
     const tripsData = await API.get('/api/trips');
     const ongoing   = (tripsData.ongoing   || []).length;
@@ -102,13 +131,21 @@
 
   async function handleUpdate(e) {
     e.preventDefault();
-    showAlert('Profile update requires additional API endpoint — coming soon!', 'warning');
-  }
-
-  async function logout() {
-    await API.post('/api/auth/logout', {});
-    window.location.href = 'index.html';
+    const data = await API.put('/api/auth/profile', {
+      name:            document.getElementById('f-name').value,
+      email:           document.getElementById('f-email').value,
+      phone:           document.getElementById('f-phone').value || null,
+      city_name:       document.getElementById('f-city').value || null,
+      country_name:    document.getElementById('f-country').value || null,
+      additional_info: document.getElementById('f-info').value || null,
+      password:        document.getElementById('f-password').value || null
+    });
+    if (data.error) return showAlert(data.error);
+    document.getElementById('profile-name').textContent = document.getElementById('f-name').value;
+    document.getElementById('avatar').textContent       = document.getElementById('f-name').value.charAt(0).toUpperCase();
+    showAlert('Profile updated', 'success');
   }
 </script>
+  </div>
+</div>
 </body>
-</html>

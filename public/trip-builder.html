@@ -18,22 +18,19 @@
     .city-search-wrap { position: relative; }
     .stop-num { width: 28px; height: 28px; border-radius: 50%; background: #6c63ff; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; flex-shrink: 0; }
   </style>
+  <script src="js/api.js"></script>
+  <script src="js/layout.js"></script>
 </head>
-<body>
+<body data-page="builder">
 
-<nav class="navbar">
-  <div class="container navbar-inner">
-    <a href="/dashboard.html" class="navbar-brand">✈ Traveloop</a>
-    <ul class="navbar-nav">
-      <li><a href="/dashboard.html">Home</a></li>
-      <li><a href="/trips.html">My Trips</a></li>
-      <li><a href="/cities.html">Explore</a></li>
-      <li><a href="/profile.html" id="nav-user">Profile</a></li>
-      <li><button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button></li>
-    </ul>
+<div id="__main" class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Itinerary Builder</span>
+    <div class="topbar-actions"></div>
   </div>
-</nav>
-
+  <div class="page-wrap">
+    <div id="__trip-subnav"></div>
+    <div id="alert" class="alert" style="display:none;"></div>
 <div class="container">
   <div class="page-header flex items-center justify-between">
     <div>
@@ -46,7 +43,7 @@
     </div>
   </div>
 
-  <div id="alert" class="alert" style="display:none;"></div>
+  
   <div id="stops-list" class="stops-list"><div class="spinner"></div></div>
 </div>
 
@@ -104,7 +101,7 @@
   </div>
 </div>
 
-<script src="js/api.js"></script>
+
 <script>
   const tripId = getParam('id');
   let stops = [];
@@ -290,11 +287,6 @@
     await loadTrip();
   }
 
-  async function logout() {
-    await API.post('/api/auth/logout', {});
-    window.location.href = 'index.html';
-  }
-
   document.addEventListener('click', (e) => {
     const results = document.getElementById('city-results');
     if (results && !results.contains(e.target) && e.target.id !== 'city-search') {
@@ -302,5 +294,6 @@
     }
   });
 </script>
+  </div>
+</div>
 </body>
-</html>

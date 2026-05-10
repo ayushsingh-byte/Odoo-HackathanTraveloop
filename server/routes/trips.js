@@ -223,4 +223,96 @@ router.put('/:id/stops/reorder', async (req, res) => {
   }
 });
 
+router.get('/:id/invoice', async (req, res) => {
+  try {
+    const [trips] = await db.query(
+      `SELECT t.*, u.name AS owner_name
+       FROM trips t JOIN users u ON u.user_id = t.user_id
+       WHERE t.trip_id = ? AND t.user_id = ?`,
+      [req.params.id, req.session.user.user_id]
+    );
+    if (trips.length === 0) return res.status(404).json({ error: 'Trip not found' });
+    const trip = trips[0];
+
+    const [budgetRows] = await db.query('SELECT * FROM trip_budgets WHERE trip_id = ?', [req.params.id]);
+    const budget = budgetRows[0] || {};
+
+    const [stops] = await db.query(
+      `SELECT ts.stop_id, ts.arrival_date, ts.departure_date,
+              c.city_name, co.country_name, c.avg_daily_cost
+       FROM trip_stops ts
+       JOIN cities c ON c.city_id = ts.city_id
+       JOIN countries co ON co.country_id = c.country_id
+       WHERE ts.trip_id = ?
+       ORDER BY ts.position`,
+      [req.params.id]
+    );
+
+    const lineItems = [];
+    for (const s of stops) {
+      const days = s.arrival_date && s.departure_date
+        ? Math.max(1, Math.ceil((new Date(s.departure_date) - new Date(s.arrival_date)) / 86400000))
+        : 1;
+      lineItems.push({
+        description: `Stay in ${s.city_name}, ${s.country_name}`,
+        qty: days,
+        unit: 'day',
+        unit_cost: s.avg_daily_cost,
+        amount: days * s.avg_daily_cost
+      });
+
+      const [acts] = await db.query(
+        `SELECT a.activity_name, a.estimated_cost, sa.actual_cost
+         FROM stop_activities sa
+         JOIN activities a ON a.activity_id = sa.activity_id
+         WHERE sa.stop_id = ?`,
+        [s.stop_id]
+      );
+      for (const a of acts) {
+        lineItems.push({
+          description: `Activity: ${a.activity_name}`,
+          qty: 1,
+          unit: 'item',
+          unit_cost: a.actual_cost || a.estimated_cost,
+          amount: a.actual_cost || a.estimated_cost
+        });
+      }
+    }
+
+    if (budget.transport_cost > 0) lineItems.push({ description: 'Transport', qty: 1, unit: 'trip', unit_cost: budget.transport_cost, amount: budget.transport_cost });
+    if (budget.food_cost > 0) lineItems.push({ description: 'Food & Dining', qty: 1, unit: 'trip', unit_cost: budget.food_cost, amount: budget.food_cost });
+    if (budget.misc_cost > 0) lineItems.push({ description: 'Miscellaneous', qty: 1, unit: 'trip', unit_cost: budget.misc_cost, amount: budget.misc_cost });
+
+    const subtotal = lineItems.reduce((s, i) => s + Number(i.amount), 0);
+    const tax_rate = 0.05;
+    const tax = subtotal * tax_rate;
+    const discount = 0;
+    const grand_total = subtotal + tax - discount;
+    const currency = budget.currency || 'USD';
+
+    res.json({
+      invoice: {
+        invoice_id: `INV-${req.params.id.substring(0, 8).toUpperCase()}`,
+        trip_title: trip.title,
+        owner_name: trip.owner_name,
+        start_date: trip.start_date,
+        end_date: trip.end_date,
+        currency,
+        line_items: lineItems,
+        subtotal,
+        tax_rate,
+        tax,
+        discount,
+        grand_total,
+        total_budget: budget.total_budget || 0,
+        total_spent: subtotal,
+        remaining: (budget.total_budget || 0) - subtotal,
+        payment_status: subtotal <= (budget.total_budget || subtotal) ? 'pending' : 'over_budget'
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

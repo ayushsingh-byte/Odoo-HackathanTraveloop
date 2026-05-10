@@ -40,6 +40,7 @@ app.use('/api/notes',      require('./routes/notes'));
 app.use('/api/transport',  require('./routes/transport'));
 app.use('/api/share',      require('./routes/share'));
 app.use('/api/admin',      require('./routes/admin'));
+app.use('/api/community',  require('./routes/community'));
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));

@@ -5,22 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Traveloop — My Trips</title>
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/api.js"></script>
+  <script src="js/layout.js"></script>
 </head>
-<body>
+<body data-page="trips">
 
-<nav class="navbar">
-  <div class="container navbar-inner">
-    <a href="/dashboard.html" class="navbar-brand">✈ Traveloop</a>
-    <ul class="navbar-nav">
-      <li><a href="/dashboard.html">Home</a></li>
-      <li><a href="/trips.html" class="active">My Trips</a></li>
-      <li><a href="/cities.html">Explore</a></li>
-      <li><a href="/profile.html" id="nav-user">Profile</a></li>
-      <li><button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button></li>
-    </ul>
+<div id="__main" class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">My Trips</span>
+    <div class="topbar-actions"></div>
   </div>
-</nav>
-
+  <div class="page-wrap">
+    <div id="alert" class="alert" style="display:none;"></div>
 <div class="container">
   <div class="page-header flex items-center justify-between">
     <div>
@@ -30,7 +26,7 @@
     <a href="/trip-new.html" class="btn btn-primary">+ New Trip</a>
   </div>
 
-  <div id="alert" class="alert" style="display:none;"></div>
+  
 
   <div class="tab-bar">
     <button class="active" onclick="showTab('ongoing')">Ongoing</button>
@@ -58,7 +54,7 @@
   </div>
 </div>
 
-<script src="js/api.js"></script>
+
 <script>
   let allTrips = { ongoing: [], upcoming: [], completed: [], undated: [] };
   let currentTab = 'ongoing';
@@ -142,11 +138,7 @@
     await loadTrips();
     showAlert('Trip deleted', 'success');
   }
-
-  async function logout() {
-    await API.post('/api/auth/logout', {});
-    window.location.href = 'index.html';
-  }
 </script>
+  </div>
+</div>
 </body>
-</html>

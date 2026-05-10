@@ -6,21 +6,19 @@
   <title>Traveloop — Budget</title>
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/layout.js"></script>
 </head>
-<body>
+<body data-page="budget">
 
-<nav class="navbar">
-  <div class="container navbar-inner">
-    <a href="/dashboard.html" class="navbar-brand">✈ Traveloop</a>
-    <ul class="navbar-nav">
-      <li><a href="/dashboard.html">Home</a></li>
-      <li><a href="/trips.html">My Trips</a></li>
-      <li><a href="/profile.html" id="nav-user">Profile</a></li>
-      <li><button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button></li>
-    </ul>
+<div id="__main" class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Budget</span>
+    <div class="topbar-actions"></div>
   </div>
-</nav>
-
+  <div class="page-wrap">
+    <div id="__trip-subnav"></div>
+    <div id="alert" class="alert" style="display:none;"></div>
 <div class="container">
   <div class="page-header flex items-center justify-between">
     <div>
@@ -30,7 +28,7 @@
     <a id="back-link" href="#" class="btn btn-secondary">← Back to Trip</a>
   </div>
 
-  <div id="alert" class="alert" style="display:none;"></div>
+  
   <div id="over-budget" class="over-budget-banner" style="display:none;">⚠ Over Budget! You have exceeded your travel budget.</div>
 
   <div class="grid grid-2 mb-3">
@@ -108,7 +106,7 @@
   </div>
 </div>
 
-<script src="js/api.js"></script>
+
 <script>
   const tripId = getParam('id');
   let pieChart, barChart;
@@ -181,11 +179,7 @@
     showAlert('Budget updated', 'success');
     await loadBudget();
   }
-
-  async function logout() {
-    await API.post('/api/auth/logout', {});
-    window.location.href = 'index.html';
-  }
 </script>
+  </div>
+</div>
 </body>
-</html>

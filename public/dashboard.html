@@ -5,70 +5,113 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Traveloop — Dashboard</title>
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/api.js"></script>
+  <script src="js/layout.js"></script>
 </head>
-<body>
+<body data-page="dashboard">
 
-<nav class="navbar">
-  <div class="container navbar-inner">
-    <a href="/dashboard.html" class="navbar-brand">✈ Traveloop</a>
-    <ul class="navbar-nav">
-      <li><a href="/dashboard.html" class="active">Home</a></li>
-      <li><a href="/trips.html">My Trips</a></li>
-      <li><a href="/cities.html">Explore</a></li>
-      <li><a href="/profile.html" id="nav-user">Profile</a></li>
-      <li><button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button></li>
-    </ul>
+<div id="__main" class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Dashboard</span>
+    <div class="topbar-actions"></div>
   </div>
-</nav>
-
+  <div class="page-wrap">
+    <div id="alert" class="alert" style="display:none;"></div>
 <div class="hero">
   <div class="container">
     <h1 id="welcome-msg">Welcome back!</h1>
     <p>Where will your next adventure take you?</p>
-    <a href="/trip-new.html" class="btn btn-lg" style="background:#fff;color:#6c63ff;font-weight:700;">+ Plan a New Trip</a>
+    <div style="display:flex;gap:0.75rem;margin-top:1.25rem;max-width:520px;margin-left:auto;margin-right:auto">
+      <input type="text" id="hero-search" class="form-control" placeholder="Search cities or destinations..." style="background:rgba(255,255,255,0.95);border:none" oninput="heroSearch(this.value)" onkeydown="if(event.key==='Enter')goSearch()">
+      <button class="btn btn-lg" style="background:#fff;color:#6c63ff;font-weight:700;white-space:nowrap" onclick="goSearch()">Search</button>
+    </div>
+    <div style="margin-top:1rem">
+      <a href="trip-new.html" class="btn btn-lg" style="background:rgba(255,255,255,0.2);color:#fff;font-weight:700;border:2px solid rgba(255,255,255,0.5)">+ Plan a New Trip</a>
+    </div>
   </div>
 </div>
 
 <div class="container">
-  <div id="alert" class="alert" style="display:none;"></div>
+  
+
+  <div class="flex items-center gap-2 mb-3" style="margin-top:1rem">
+    <select id="trip-sort" class="form-control" style="max-width:180px" onchange="renderRecentTrips()">
+      <option value="recent">Most Recent</option>
+      <option value="upcoming">Upcoming First</option>
+      <option value="completed">Completed First</option>
+    </select>
+    <select id="trip-filter" class="form-control" style="max-width:160px" onchange="renderRecentTrips()">
+      <option value="all">All Status</option>
+      <option value="ongoing">Ongoing</option>
+      <option value="upcoming">Upcoming</option>
+      <option value="completed">Completed</option>
+    </select>
+  </div>
 
   <div class="section-title">
     <span>Your Recent Trips</span>
-    <a href="/trips.html" class="btn btn-secondary btn-sm">View All</a>
+    <a href="trips.html" class="btn btn-secondary btn-sm">View All</a>
   </div>
   <div id="recent-trips" class="grid grid-3 mb-3"><div class="spinner"></div></div>
 
   <div class="section-title">
     <span>Popular Destinations</span>
-    <a href="/cities.html" class="btn btn-secondary btn-sm">Explore All</a>
+    <a href="cities.html" class="btn btn-secondary btn-sm">Explore All</a>
   </div>
   <div id="popular-cities" class="grid grid-4"><div class="spinner"></div></div>
 </div>
 
-<script src="js/api.js"></script>
+
 <script>
+  let allTripsData = { ongoing: [], upcoming: [], completed: [], undated: [] };
+
   (async () => {
     const user = await checkAuth();
     if (!user) return;
     setNavUser(user);
     document.getElementById('welcome-msg').textContent = `Welcome back, ${user.name.split(' ')[0]}!`;
 
-    const tripsData = await API.get('/api/trips');
-    const allTrips = [...(tripsData.ongoing || []), ...(tripsData.upcoming || []), ...(tripsData.completed || [])].slice(0, 3);
-    const tripsEl = document.getElementById('recent-trips');
-    if (allTrips.length === 0) {
-      tripsEl.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><h3>No trips yet</h3><p>Start planning your first adventure!</p><a href="/trip-new.html" class="btn btn-primary mt-2">Plan a Trip</a></div>`;
-    } else {
-      tripsEl.innerHTML = allTrips.map(t => tripCard(t)).join('');
-    }
+    allTripsData = await API.get('/api/trips');
+    renderRecentTrips();
 
     const citiesData = await API.get('/api/cities?limit=8');
-    document.getElementById('popular-cities').innerHTML = citiesData.cities.map(c => cityCard(c)).join('');
+    document.getElementById('popular-cities').innerHTML = (citiesData.cities || []).map(c => cityCard(c)).join('');
   })();
+
+  function renderRecentTrips() {
+    const sort   = document.getElementById('trip-sort').value;
+    const filter = document.getElementById('trip-filter').value;
+
+    let trips;
+    if (filter === 'ongoing')   trips = allTripsData.ongoing || [];
+    else if (filter === 'upcoming') trips = allTripsData.upcoming || [];
+    else if (filter === 'completed') trips = allTripsData.completed || [];
+    else trips = [...(allTripsData.ongoing || []), ...(allTripsData.upcoming || []), ...(allTripsData.completed || [])];
+
+    if (sort === 'upcoming') trips = [...(allTripsData.upcoming || []), ...(allTripsData.ongoing || []), ...(allTripsData.completed || [])];
+    else if (sort === 'completed') trips = [...(allTripsData.completed || []), ...(allTripsData.ongoing || []), ...(allTripsData.upcoming || [])];
+
+    trips = trips.slice(0, 6);
+    const tripsEl = document.getElementById('recent-trips');
+    if (trips.length === 0) {
+      tripsEl.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><h3>No trips yet</h3><p>Start planning your first adventure!</p><a href="trip-new.html" class="btn btn-primary mt-2">Plan a Trip</a></div>`;
+    } else {
+      tripsEl.innerHTML = trips.map(t => tripCard(t)).join('');
+    }
+  }
+
+  function heroSearch(q) {
+    if (q.length < 1) return;
+  }
+
+  function goSearch() {
+    const q = document.getElementById('hero-search').value.trim();
+    if (q) window.location.href = `cities.html?q=${encodeURIComponent(q)}`;
+  }
 
   function tripCard(t) {
     const cover = t.cover_image || `https://picsum.photos/seed/${t.trip_id}/400/200`;
-    return `<div class="card trip-card" onclick="window.location='/trip-view.html?id=${t.trip_id}'">
+    return `<div class="card trip-card" onclick="window.location='trip-view.html?id=${t.trip_id}'">
       <img class="trip-card-cover" src="${cover}" alt="${t.title}" onerror="this.style.background='linear-gradient(135deg,#6c63ff,#a78bfa)'">
       <div class="card-body">
         <h3>${t.title}</h3>
@@ -81,7 +124,7 @@
   }
 
   function cityCard(c) {
-    return `<div class="card city-card" onclick="window.location='/cities.html?city_id=${c.city_id}'">
+    return `<div class="card city-card" onclick="window.location='cities.html?city_id=${c.city_id}'">
       <img class="city-card-img" src="${c.image_url || ''}" alt="${c.city_name}" onerror="this.style.background='#ede9ff'">
       <div class="card-body" style="padding:0.75rem 1rem">
         <h3 style="font-size:0.95rem">${c.city_name}</h3>
@@ -89,11 +132,7 @@
       </div>
     </div>`;
   }
-
-  async function logout() {
-    await API.post('/api/auth/logout', {});
-    window.location.href = 'index.html';
-  }
 </script>
+  </div>
+</div>
 </body>
-</html>

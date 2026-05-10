@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traveloop — Community</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .post-card { background: #fff; border: 1.5px solid #e5e7eb; border-radius: 14px; padding: 1.5rem; margin-bottom: 1.25rem; }
+    .post-author { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+    .post-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #6c63ff, #a78bfa); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; flex-shrink: 0; }
+    .post-meta { font-size: 0.82rem; color: #6b7280; }
+    .post-image { width: 100%; max-height: 280px; object-fit: cover; border-radius: 10px; margin: 0.75rem 0; }
+    .post-actions { display: flex; align-items: center; gap: 1rem; margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid #f1f0ff; }
+    .like-btn { background: none; border: none; cursor: pointer; color: #6b7280; font-size: 0.9rem; display: flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.6rem; border-radius: 6px; transition: background 0.15s; }
+    .like-btn:hover { background: #f1f0ff; color: #6c63ff; }
+    .category-badge { font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 20px; font-weight: 600; text-transform: capitalize; }
+    .cat-experience { background: #ede9ff; color: #6c63ff; }
+    .cat-tip { background: #d1fae5; color: #065f46; }
+    .cat-photo { background: #fef3c7; color: #92400e; }
+    .cat-review { background: #fee2e2; color: #991b1b; }
+    .filter-row { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center; }
+  </style>
+  <script src="js/api.js"></script>
+  <script src="js/layout.js"></script>
+</head>
+<body data-page="community">
+
+<div id="__main" class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Community</span>
+    <div class="topbar-actions"></div>
+  </div>
+  <div class="page-wrap">
+    <div id="alert" class="alert" style="display:none;"></div>
+<div class="container" style="max-width:760px">
+  <div class="page-header flex items-center justify-between">
+    <div>
+      <h1>Community</h1>
+      <p>Share experiences, tips, and travel stories</p>
+    </div>
+    <button class="btn btn-primary" onclick="openPost()">+ Share Experience</button>
+  </div>
+
+  
+
+  <div class="filter-row">
+    <input type="text" id="search-q" class="form-control" placeholder="Search posts..." style="flex:1;min-width:180px" oninput="debounce()">
+    <select id="cat-filter" class="form-control" style="max-width:160px" onchange="loadPosts()">
+      <option value="">All Categories</option>
+      <option value="experience">Experience</option>
+      <option value="tip">Travel Tip</option>
+      <option value="photo">Photo</option>
+      <option value="review">Review</option>
+    </select>
+    <select id="sort-filter" class="form-control" style="max-width:140px" onchange="loadPosts()">
+      <option value="recent">Most Recent</option>
+      <option value="liked">Most Liked</option>
+    </select>
+  </div>
+
+  <div id="posts-list"><div class="spinner"></div></div>
+  <div id="load-more-wrap" style="text-align:center;margin-top:1rem;display:none">
+    <button class="btn btn-secondary" onclick="loadMore()">Load More</button>
+  </div>
+</div>
+
+<div id="post-modal" class="modal-overlay" style="display:none;">
+  <div class="modal" style="max-width:580px">
+    <div class="modal-header">
+      <h3>Share Experience</h3>
+      <button class="modal-close" onclick="closePost()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Title</label>
+        <input type="text" id="p-title" class="form-control" placeholder="Amazing sunset in Santorini...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select id="p-cat" class="form-control">
+          <option value="experience">Experience</option>
+          <option value="tip">Travel Tip</option>
+          <option value="photo">Photo</option>
+          <option value="review">Review</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Your Story</label>
+        <textarea id="p-body" class="form-control" rows="5" placeholder="Share your travel story..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Image URL (optional)</label>
+        <input type="url" id="p-img" class="form-control" placeholder="https://...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closePost()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitPost()">Post</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  let currentUser;
+  let offset = 0;
+  const PAGE = 10;
+  let searchTimer;
+
+  (async () => {
+    const user = await checkAuth();
+    if (!user) return;
+    currentUser = user;
+    setNavUser(user);
+    await loadPosts();
+  })();
+
+  function debounce() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(loadPosts, 350);
+  }
+
+  async function loadPosts(append = false) {
+    if (!append) offset = 0;
+    const q = document.getElementById('search-q').value.trim();
+    const cat = document.getElementById('cat-filter').value;
+    let url = `/api/community?limit=${PAGE}&offset=${offset}`;
+    if (q) url += `&q=${encodeURIComponent(q)}`;
+    if (cat) url += `&category=${cat}`;
+
+    const data = await API.get(url);
+    const posts = data.posts || [];
+    const el = document.getElementById('posts-list');
+
+    if (!append) {
+      if (posts.length === 0) {
+        el.innerHTML = '<div class="empty-state"><h3>No posts yet</h3><p>Be the first to share your travel experience!</p></div>';
+        document.getElementById('load-more-wrap').style.display = 'none';
+        return;
+      }
+      el.innerHTML = posts.map(p => postCard(p)).join('');
+    } else {
+      el.innerHTML += posts.map(p => postCard(p)).join('');
+    }
+
+    document.getElementById('load-more-wrap').style.display = posts.length === PAGE ? 'block' : 'none';
+  }
+
+  function postCard(p) {
+    const catClass = `cat-${p.category}`;
+    const initial = (p.author_name || 'U').charAt(0).toUpperCase();
+    return `<div class="post-card">
+      <div class="post-author">
+        <div class="post-avatar">${initial}</div>
+        <div>
+          <strong>${p.author_name}</strong>
+          ${p.trip_title ? `<span class="text-muted" style="margin-left:0.4rem;font-size:0.82rem">on ${p.trip_title}</span>` : ''}
+          <div class="post-meta">${fmt(p.created_at)}</div>
+        </div>
+        <span class="category-badge ${catClass}" style="margin-left:auto">${p.category}</span>
+      </div>
+      <h3 style="margin-bottom:0.5rem">${p.title}</h3>
+      <p style="font-size:0.92rem;white-space:pre-wrap;color:#374151">${p.body}</p>
+      ${p.image_url ? `<img class="post-image" src="${p.image_url}" alt="" onerror="this.style.display='none'">` : ''}
+      <div class="post-actions">
+        <button class="like-btn" onclick="likePost(${p.post_id}, this)">♥ <span>${p.likes_count}</span></button>
+        ${p.author_id === currentUser.user_id || currentUser.role === 'admin'
+          ? `<button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="deletePost(${p.post_id}, this)">Delete</button>`
+          : ''}
+      </div>
+    </div>`;
+  }
+
+  async function likePost(id, btn) {
+    await API.post(`/api/community/${id}/like`, {});
+    const span = btn.querySelector('span');
+    span.textContent = parseInt(span.textContent) + 1;
+  }
+
+  async function deletePost(id, btn) {
+    if (!confirm('Delete this post?')) return;
+    await API.del(`/api/community/${id}`);
+    btn.closest('.post-card').remove();
+  }
+
+  function loadMore() {
+    offset += PAGE;
+    loadPosts(true);
+  }
+
+  function openPost() {
+    document.getElementById('p-title').value = '';
+    document.getElementById('p-body').value = '';
+    document.getElementById('p-img').value = '';
+    document.getElementById('p-cat').value = 'experience';
+    document.getElementById('post-modal').style.display = 'flex';
+  }
+
+  function closePost() {
+    document.getElementById('post-modal').style.display = 'none';
+  }
+
+  async function submitPost() {
+    const title = document.getElementById('p-title').value.trim();
+    const body = document.getElementById('p-body').value.trim();
+    if (!title || !body) return showAlert('Title and story required');
+    const data = await API.post('/api/community', {
+      title,
+      body,
+      category: document.getElementById('p-cat').value,
+      image_url: document.getElementById('p-img').value || null
+    });
+    if (data.error) return showAlert(data.error);
+    closePost();
+    await loadPosts();
+    showAlert('Posted!', 'success');
+  }
+</script>
+  </div>
+</div>
+</body>

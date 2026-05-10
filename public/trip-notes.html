@@ -5,21 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Traveloop — Trip Notes</title>
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/api.js"></script>
+  <script src="js/layout.js"></script>
 </head>
-<body>
+<body data-page="notes">
 
-<nav class="navbar">
-  <div class="container navbar-inner">
-    <a href="/dashboard.html" class="navbar-brand">✈ Traveloop</a>
-    <ul class="navbar-nav">
-      <li><a href="/dashboard.html">Home</a></li>
-      <li><a href="/trips.html">My Trips</a></li>
-      <li><a href="/profile.html" id="nav-user">Profile</a></li>
-      <li><button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button></li>
-    </ul>
+<div id="__main" class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Trip Notes</span>
+    <div class="topbar-actions"></div>
   </div>
-</nav>
-
+  <div class="page-wrap">
+    <div id="__trip-subnav"></div>
+    <div id="alert" class="alert" style="display:none;"></div>
 <div class="container" style="max-width:760px">
   <div class="page-header flex items-center justify-between">
     <div>
@@ -32,7 +30,7 @@
     </div>
   </div>
 
-  <div id="alert" class="alert" style="display:none;"></div>
+  
 
   <div class="tab-bar">
     <button class="active" onclick="filterNotes('all')">All</button>
@@ -78,7 +76,7 @@
   </div>
 </div>
 
-<script src="js/api.js"></script>
+
 <script>
   const tripId = getParam('id');
   let stops = [];
@@ -200,11 +198,7 @@
     await API.del(`/api/notes/${tripId}/${noteId}`);
     await loadNotes();
   }
-
-  async function logout() {
-    await API.post('/api/auth/logout', {});
-    window.location.href = 'index.html';
-  }
 </script>
+  </div>
+</div>
 </body>
-</html>
