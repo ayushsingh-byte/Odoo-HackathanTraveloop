@@ -272,7 +272,10 @@ GET  /api/admin/users       — all users (admin only)
 | Name | GitHub |
 |---|---|
 | Ayush Singh | [@ayushsingh-byte](https://github.com/ayushsingh-byte) |
-| Ridam | [@w1tn3sss](https://github.com/w1tn3sss) |
+| Ridam | [@ridamdarji25](https://github.com/ridamdarji25) |
+| Mahil | [@mahiljoshi](https://github.com/mahiljoshi) |
+| Hetvi | [@Hetvi-2610](https://github.com/Hetvi-2610) |
+
 
 ---
 
