@@ -32,13 +32,13 @@ const S = {
     overflow: 'hidden',
   }),
   toggleBtn: {
-    position: 'absolute', top: 18, right: -12,
-    width: 24, height: 24, borderRadius: '50%',
-    background: 'rgba(201,168,76,0.9)',
-    border: 'none', cursor: 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    zIndex: 101, color: '#0a0a0a',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+    width: '100%', padding: '0.5rem 0',
+    background: 'transparent',
+    border: 'none', borderTop: '1px solid rgba(255,255,255,0.06)',
+    cursor: 'pointer', color: 'rgba(255,255,255,0.25)',
+    transition: 'color 0.2s',
+    fontSize: '0.7rem', gap: '0.4rem',
   },
   navItem: (active, collapsed) => ({
     display: 'flex', alignItems: 'center',
@@ -68,10 +68,6 @@ export default function Sidebar() {
 
   return (
     <motion.aside animate={{ width: w }} transition={{ duration: 0.25 }} style={S.aside(w)}>
-      <button style={S.toggleBtn} onClick={() => setCollapsed(c => !c)}>
-        {collapsed ? <ChevronRight size={12} strokeWidth={3} /> : <ChevronLeft size={12} strokeWidth={3} />}
-      </button>
-
       <Link to="/home" style={S.brand(collapsed)}>
         <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#c9a84c,#e8a87c)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <Globe size={16} color="#0a0a0a" />
@@ -105,6 +101,19 @@ export default function Sidebar() {
           </>
         )}
       </nav>
+
+      <button
+        onClick={() => setCollapsed(c => !c)}
+        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        style={S.toggleBtn}
+        onMouseEnter={e => { e.currentTarget.style.color = 'rgba(201,168,76,0.8)'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+        onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.25)'; e.currentTarget.style.background = 'transparent'; }}
+      >
+        {collapsed
+          ? <><ChevronRight size={13} strokeWidth={2} /><span style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>EXPAND</span></>
+          : <><ChevronLeft size={13} strokeWidth={2} /><span style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>COLLAPSE</span></>
+        }
+      </button>
 
       <div style={{ padding: collapsed ? '0.75rem 0.5rem' : '0.75rem', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
         <Link to="/profile" title={collapsed ? user?.name : undefined} style={{ display: 'flex', alignItems: 'center', gap: collapsed ? 0 : '0.6rem', padding: collapsed ? '0.6rem 0' : '0.6rem 0.75rem', borderRadius: 10, textDecoration: 'none', marginBottom: 4, justifyContent: collapsed ? 'center' : 'flex-start', overflow: 'hidden' }}>

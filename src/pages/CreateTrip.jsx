@@ -98,7 +98,7 @@ export default function CreateTrip() {
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="col-span-2 sm:col-span-1 h-40 rounded-3xl glass p-4 flex flex-col justify-center border border-luxury-gold/50 shadow-gold-glow">
                       <label className="font-body text-[10px] text-white/50 uppercase tracking-wider mb-2 text-center">Custom Destination</label>
                       <input type="text" value={dest} onChange={e => { setDest(e.target.value); setBgImg(''); }} placeholder="Where to?" className="w-full bg-transparent border-b border-white/20 text-center font-display text-xl text-luxury-white focus:outline-none focus:border-luxury-gold pb-1 mb-3" autoFocus />
-                      <button onClick={() => setShowCustom(false)} className="text-[10px] uppercase tracking-widest font-semibold text-luxury-gold hover:text-luxury-white transition-colors">Done</button>
+                      <button onClick={() => { setShowCustom(false); if (dest.trim()) setStep(1); }} className="text-[10px] uppercase tracking-widest font-semibold text-luxury-gold hover:text-luxury-white transition-colors">Done →</button>
                     </motion.div>
                   ) : (
                     <motion.div whileHover={{ y: -4 }} onClick={() => setShowCustom(true)} className="h-40 rounded-3xl glass flex items-center justify-center cursor-pointer hover:border-luxury-gold/20 transition-all duration-300">

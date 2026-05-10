@@ -55,7 +55,7 @@ export default function TripView() {
   );
 
   return (
-    <div style={{ background: '#0a0a0a', minHeight: '100vh', color: '#faf9f6', paddingTop: '2rem' }}>
+    <div className="dark-trip-page" style={{ background: '#0a0a0a', minHeight: '100vh', paddingTop: '2rem' }}>
     <div className="container">
       {alert && <div className={`alert alert-${alert.type}`}>{alert.msg}</div>}
       {tripSubNav}

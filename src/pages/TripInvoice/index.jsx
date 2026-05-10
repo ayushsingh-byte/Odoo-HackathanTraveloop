@@ -66,7 +66,7 @@ export default function TripInvoice() {
   );
 
   return (
-    <div style={{ background: '#0a0a0a', minHeight: '100vh', color: '#faf9f6', paddingTop: '2rem' }}>
+    <div className="dark-trip-page" style={{ background: '#0a0a0a', minHeight: '100vh', paddingTop: '2rem' }}>
       <style>{`
         .invoice-wrap{display:grid;grid-template-columns:1fr 320px;gap:2rem}
         @media(max-width:900px){.invoice-wrap{grid-template-columns:1fr}}
