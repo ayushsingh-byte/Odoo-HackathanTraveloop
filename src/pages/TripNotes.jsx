@@ -5,8 +5,31 @@ import GlassCard from '../components/GlassCard';
 import { tripNotes } from '../data/mockData';
 
 export default function TripNotes() {
+  const [notes, setNotes] = useState(tripNotes);
   const [activeNote, setActiveNote] = useState(0);
-  const note = tripNotes[activeNote];
+  const [isEditing, setIsEditing] = useState(false);
+  
+  const note = notes[activeNote] || tripNotes[0];
+
+  const handleNoteChange = (field, value) => {
+    const newNotes = [...notes];
+    newNotes[activeNote] = { ...newNotes[activeNote], [field]: value };
+    setNotes(newNotes);
+  };
+
+  const handleAddNote = () => {
+    const newNote = {
+      id: Date.now(),
+      title: 'New Chapter',
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      mood: '✍️',
+      content: 'Start writing your travel story...',
+      image: '/images/hero-bali.png'
+    };
+    setNotes([newNote, ...notes]);
+    setActiveNote(0);
+    setIsEditing(true);
+  };
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -26,12 +49,17 @@ export default function TripNotes() {
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Note List */}
           <div className="lg:col-span-1 space-y-3">
-            <button className="w-full glass p-4 rounded-xl flex items-center gap-3 text-white/40 hover:text-luxury-gold hover:border-luxury-gold/20 transition-all duration-300">
+            <motion.button 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleAddNote}
+              className="w-full glass p-4 rounded-xl flex items-center gap-3 text-white/40 hover:text-luxury-gold hover:border-luxury-gold/20 transition-all duration-300"
+            >
               <Plus className="w-4 h-4" /><span className="font-body text-sm">New Note</span>
-            </button>
-            {tripNotes.map((n, i) => (
+            </motion.button>
+            {notes.map((n, i) => (
               <motion.div key={n.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }}>
-                <button onClick={() => setActiveNote(i)}
+                <button onClick={() => { setActiveNote(i); setIsEditing(false); }}
                   className={`w-full text-left p-4 rounded-xl transition-all duration-300 ${
                     activeNote === i ? 'glass-gold' : 'glass hover:bg-white/[0.06]'}`}>
                   <div className="flex items-center gap-2 mb-1.5">
@@ -51,17 +79,31 @@ export default function TripNotes() {
               <div className="relative h-56">
                 <img src={note.image} alt="" className="img-cover" />
                 <div className="absolute inset-0 overlay-cinematic" />
-                <div className="absolute bottom-5 left-6">
+                <div className="absolute bottom-5 left-6 right-6">
                   <span className="text-3xl mb-2 block">{note.mood}</span>
-                  <h2 className="font-display text-2xl font-semibold text-luxury-white">{note.title}</h2>
+                  {isEditing ? (
+                    <input type="text" value={note.title} onChange={(e) => handleNoteChange('title', e.target.value)} className="block w-full bg-black/40 border-b border-luxury-gold text-luxury-white font-display text-2xl font-semibold focus:outline-none mb-1 mt-1" />
+                  ) : (
+                    <h2 className="font-display text-2xl font-semibold text-luxury-white">{note.title}</h2>
+                  )}
                   <p className="font-body text-xs text-white/50 mt-1">{note.date}</p>
                 </div>
               </div>
-              <div className="p-8">
-                <p className="font-body text-base text-white/60 leading-relaxed whitespace-pre-wrap">{note.content}</p>
+              <div className="p-8 flex flex-col h-full">
+                {isEditing ? (
+                  <textarea value={note.content} onChange={(e) => handleNoteChange('content', e.target.value)} className="w-full h-48 bg-black/20 border border-white/10 rounded-xl p-4 text-luxury-white font-body text-base focus:outline-none focus:border-luxury-gold resize-none" />
+                ) : (
+                  <p className="font-body text-base text-white/60 leading-relaxed whitespace-pre-wrap">{note.content}</p>
+                )}
                 <div className="mt-8 flex items-center gap-4">
-                  <button className="flex items-center gap-2 font-body text-xs text-white/30 hover:text-luxury-gold transition-colors"><PenTool className="w-3.5 h-3.5" /> Edit</button>
-                  <button className="flex items-center gap-2 font-body text-xs text-white/30 hover:text-luxury-gold transition-colors"><Image className="w-3.5 h-3.5" /> Add Photo</button>
+                  <motion.button whileTap={{ scale: 0.95 }} onClick={() => setIsEditing(!isEditing)} className={`flex items-center gap-2 font-body text-xs transition-colors ${isEditing ? 'text-luxury-gold font-semibold' : 'text-white/30 hover:text-luxury-white'}`}><PenTool className="w-3.5 h-3.5" /> {isEditing ? 'Save' : 'Edit'}</motion.button>
+                  <motion.button 
+                    whileTap={{ scale: 0.95 }} 
+                    onClick={() => alert('Photo library access simulated.')}
+                    className="flex items-center gap-2 font-body text-xs text-white/30 hover:text-luxury-white transition-colors"
+                  >
+                    <Image className="w-3.5 h-3.5" /> Add Photo
+                  </motion.button>
                 </div>
               </div>
             </GlassCard>

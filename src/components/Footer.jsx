@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Globe, Instagram, Twitter, Mail, ArrowUpRight } from 'lucide-react';
 
 const footerLinks = {
@@ -45,14 +46,22 @@ export default function Footer() {
             </p>
             {/* Social */}
             <div className="flex items-center gap-4">
-              {[Instagram, Twitter, Mail].map((Icon, i) => (
-                <a
+              {[
+                { Icon: Instagram, href: 'https://instagram.com/traveloop' },
+                { Icon: Twitter, href: 'https://twitter.com/traveloop' },
+                { Icon: Mail, href: 'mailto:hello@traveloop.com' }
+              ].map(({ Icon, href }, i) => (
+                <motion.a
                   key={i}
-                  href="#"
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ y: -4, scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   className="w-10 h-10 rounded-full glass flex items-center justify-center text-white/40 hover:text-luxury-gold hover:border-luxury-gold/20 transition-all duration-300"
                 >
                   <Icon className="w-4 h-4" />
-                </a>
+                </motion.a>
               ))}
             </div>
           </div>
@@ -67,7 +76,7 @@ export default function Footer() {
                 {links.map((link) => (
                   <li key={link.name}>
                     <Link
-                      to={link.path}
+                      to={link.path || '/'}
                       className="font-body text-sm text-white/40 hover:text-luxury-white transition-colors duration-300 flex items-center gap-1 group"
                     >
                       {link.name}
@@ -87,13 +96,13 @@ export default function Footer() {
           </p>
           <div className="flex items-center gap-6">
             {['Privacy', 'Terms', 'Cookies'].map((item) => (
-              <a
+              <Link
                 key={item}
-                href="#"
+                to="/"
                 className="text-white/20 font-body text-xs hover:text-white/40 transition-colors duration-300"
               >
                 {item}
-              </a>
+              </Link>
             ))}
           </div>
         </div>

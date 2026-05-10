@@ -3,14 +3,14 @@
 export const destinations = [
   {
     id: 1,
-    name: 'Dehradun',
-    country: 'India',
-    tagline: 'Gateway to the Himalayas',
-    image: '/images/hero-dehradun.png',
+    name: 'Bali',
+    country: 'Indonesia',
+    tagline: 'Island of the Gods',
+    image: '/images/hero-bali.png',
     rating: 4.9,
     trips: 2840,
     category: 'Nature',
-    description: 'Explore misty pine forests, serene valleys, and charming cafes in the foothills of the majestic Himalayas.'
+    description: 'Explore lush rice terraces, ancient temples, and vibrant beach clubs in this tropical paradise.'
   },
   {
     id: 2,
@@ -72,15 +72,15 @@ export const destinations = [
 export const featuredTrips = [
   {
     id: 1,
-    title: '10 Days in Uttarakhand',
-    destinations: ['Dehradun', 'Mussoorie', 'Rishikesh'],
-    image: '/images/hero-dehradun.png',
+    title: '10 Days in Bali',
+    destinations: ['Ubud', 'Canggu', 'Seminyak'],
+    image: '/images/hero-bali.png',
     duration: '10 days',
     price: '$1,800',
     rating: 4.9,
     traveler: 'Riya M.',
-    travelerAvatar: '🏔️',
-    description: 'A serene journey through the Himalayan foothills.'
+    travelerAvatar: '🌴',
+    description: 'A serene journey through the Island of the Gods.'
   },
   {
     id: 2,
@@ -202,20 +202,20 @@ export const activities = [
 ];
 
 export const itineraryData = {
-  tripName: '10 Days in Uttarakhand',
-  destination: 'Dehradun',
+  tripName: '10 Days in Bali',
+  destination: 'Bali',
   dates: 'Oct 15 – Oct 25, 2025',
   travelers: 2,
   totalBudget: 2400,
   spent: 1250,
-  heroImage: '/images/hero-dehradun.png',
+  heroImage: '/images/hero-bali.png',
   days: [
     {
       day: 1,
       date: 'Oct 15',
-      city: 'Dehradun',
-      title: 'Arrival in Dehradun',
-      image: '/images/hero-dehradun.png',
+      city: 'Bali',
+      title: 'Arrival in Bali',
+      image: '/images/hero-bali.png',
       activities: [
         { time: '14:00', name: 'Airport Transfer', cost: 20, type: 'transport', icon: '✈️' },
         { time: '16:00', name: 'Hotel Check-in — Forest Resort', cost: 150, type: 'hotel', icon: '🏨' },
@@ -335,11 +335,11 @@ export const packingItems = [
 export const tripNotes = [
   {
     id: 1,
-    title: 'First Impressions of Dehradun',
+    title: 'First Impressions of Bali',
     date: 'Oct 15, 2025',
-    content: 'The mountain air hits differently here. Pine trees, misty mornings, and a slow pace of life that instantly relaxes you.',
-    image: '/images/hero-dehradun.png',
-    mood: '🌲'
+    content: 'The tropical air hits differently here. Palm trees, ocean breeze, and a slow pace of life that instantly relaxes you.',
+    image: '/images/hero-bali.png',
+    mood: '🌴'
   },
   {
     id: 2,
@@ -373,8 +373,8 @@ export const communityTrips = [
     user: 'Elena Moretti',
     avatar: '🌸',
     trip: 'Himalayan Retreat',
-    destination: 'Dehradun',
-    image: '/images/hero-dehradun.png',
+    destination: 'Bali',
+    image: '/images/hero-bali.png',
     likes: 2840,
     saves: 890,
     duration: '14 days',
@@ -457,7 +457,7 @@ export const adminStats = {
     { month: 'Jun', users: 2850, trips: 720, revenue: 285000 },
   ],
   topDestinations: [
-    { name: 'Dehradun', trips: 840, percentage: 24 },
+    { name: 'Bali', trips: 840, percentage: 24 },
     { name: 'Andaman', trips: 720, percentage: 21 },
     { name: 'Jaipur', trips: 680, percentage: 20 },
     { name: 'Kerala', trips: 520, percentage: 15 },

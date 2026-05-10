@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Globe, User, Search, LogOut } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { Menu, X, Globe, User, Search } from 'lucide-react';
 
 const navLinks = [
   { name: 'Home', path: '/' },
@@ -15,7 +14,6 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
-  const { user, logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -77,28 +75,22 @@ export default function Navbar() {
 
             {/* Right Actions */}
             <div className="hidden md:flex items-center gap-4">
-              <button className="p-2.5 rounded-full hover:bg-white/5 transition-colors duration-300" aria-label="Search">
-                <Search className="w-4.5 h-4.5 text-white/60" />
-              </button>
+              <Link to="/explore" className="p-2.5 rounded-full hover:bg-white/5 transition-colors duration-300 group" aria-label="Search">
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                  <Search className="w-4.5 h-4.5 text-white/60 group-hover:text-luxury-gold" />
+                </motion.div>
+              </Link>
               <Link
                 to="/profile"
-                className="flex items-center gap-2 p-2.5 rounded-full hover:bg-white/5 transition-colors duration-300"
+                className="p-2.5 rounded-full hover:bg-white/5 transition-colors duration-300 group"
                 aria-label="Profile"
               >
-                <User className="w-4.5 h-4.5 text-white/60" />
-                {user?.name && (
-                  <span className="font-body text-sm text-white/60">{user.name.split(' ')[0]}</span>
-                )}
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                  <User className="w-4.5 h-4.5 text-white/60 group-hover:text-luxury-gold" />
+                </motion.div>
               </Link>
-              <button
-                onClick={logout}
-                className="p-2.5 rounded-full hover:bg-white/5 transition-colors duration-300"
-                aria-label="Logout"
-              >
-                <LogOut className="w-4.5 h-4.5 text-white/60" />
-              </button>
               <Link to="/create-trip" className="btn-primary text-xs py-2.5 px-6">
-                Plan a Trip
+                <motion.span whileHover={{ x: 3 }} className="flex items-center gap-2">Plan a Trip</motion.span>
               </Link>
             </div>
 
@@ -168,21 +160,8 @@ export default function Navbar() {
                   className="flex items-center gap-3 text-white/60 hover:text-white/80 transition-colors"
                 >
                   <User className="w-5 h-5" />
-                  <span className="font-body text-sm">{user?.name ? user.name.split(' ')[0] : 'Profile'}</span>
+                  <span className="font-body text-sm">Profile</span>
                 </Link>
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 }}
-              >
-                <button
-                  onClick={logout}
-                  className="flex items-center gap-3 text-white/60 hover:text-white/80 transition-colors"
-                >
-                  <LogOut className="w-5 h-5" />
-                  <span className="font-body text-sm">Logout</span>
-                </button>
               </motion.div>
             </div>
           </motion.div>

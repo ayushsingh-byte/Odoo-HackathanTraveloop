@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ArrowLeft, MapPin, Calendar, Users, Wallet, Heart, Mountain, Palette, Waves, Sparkles } from 'lucide-react';
-import GlassCard from '../components/GlassCard';
+import { ArrowRight, ArrowLeft, Heart, Mountain, Palette, Waves, Sparkles } from 'lucide-react';
 import { API } from '../services/api';
 
 const moods = [
@@ -26,28 +25,28 @@ export default function CreateTrip() {
   const [dest, setDest] = useState('');
   const [mood, setMood] = useState('');
   const [bgImg, setBgImg] = useState('/images/hero-india.png');
-  const [customDest, setCustomDest] = useState('');
-  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [showCustom, setShowCustom] = useState(false);
   const [tripName, setTripName] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [budget, setBudget] = useState('5000');
+  const [creating, setCreating] = useState(false);
 
   const steps = ['Destination', 'Travel Style', 'Details'];
 
-  const effectiveDest = dest || customDest;
-
   const handleCreate = async () => {
-    const finalName = tripName.trim() || `${effectiveDest || 'My'} Adventure`;
+    setCreating(true);
+    const finalName = tripName.trim() || `${dest || 'My'} Adventure`;
     const data = await API.post('/api/trips', {
       title: finalName,
-      description: `A ${mood || 'wonderful'} trip to ${effectiveDest || 'an amazing destination'}`,
+      description: `A ${mood || 'wonderful'} trip to ${dest || 'an amazing destination'}`,
       start_date: startDate || null,
       end_date: endDate || null,
       total_budget: parseFloat(budget) || 5000,
       currency: 'USD',
       visibility: 'private',
     });
+    setCreating(false);
     if (data?.trip_id) navigate(`/trip/builder?id=${data.trip_id}`);
     else navigate('/my-trips');
   };
@@ -83,40 +82,29 @@ export default function CreateTrip() {
                   <p className="font-body text-sm text-white/40">Choose your dream destination</p>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {destOptions.map(d => (
-                    <motion.div key={d.name} whileHover={{ y: -4 }} onClick={() => { setDest(d.name); setBgImg(d.img); }}
-                      className={`relative h-40 rounded-2xl overflow-hidden cursor-pointer border-2 transition-all duration-500 ${
+                  {destOptions.map((d, i) => (
+                    <motion.div key={d.name} whileHover={{ y: -4 }} onClick={() => { setDest(d.name); setBgImg(d.img); setShowCustom(false); }}
+                      className={`relative h-40 rounded-3xl overflow-hidden cursor-pointer border-2 transition-all duration-500 ${i % 2 === 0 ? '' : 'animation-delay-500'} ${
                         dest === d.name ? 'border-luxury-gold shadow-gold-glow' : 'border-transparent hover:border-white/20'}`}>
-                      <img src={d.img} alt={d.name} className="img-cover" />
+                      <img src={d.img} alt={d.name} className="img-cover object-cover object-center" />
                       <div className="absolute inset-0 bg-black/40" />
                       <div className="absolute inset-0 flex items-center justify-center">
                         <span className="font-display text-xl font-semibold text-luxury-white">{d.name}</span>
                       </div>
-                      {dest === d.name && <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-luxury-gold flex items-center justify-center text-luxury-black text-xs font-bold">✓</div>}
+                      {dest === d.name && <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-luxury-gold flex items-center justify-center text-luxury-black text-xs font-bold shadow-lg">✓</div>}
                     </motion.div>
                   ))}
-                  <motion.div whileHover={{ y: -4 }} onClick={() => { setShowCustomInput(true); setDest(''); }}
-                    className={`h-40 rounded-2xl glass flex flex-col items-center justify-center cursor-pointer transition-all duration-300 border-2 ${
-                      showCustomInput ? 'border-luxury-gold bg-luxury-gold/10' : 'border-transparent hover:border-white/20'}`}>
-                    {showCustomInput ? (
-                      <div className="w-full px-4" onClick={e => e.stopPropagation()}>
-                        <p className="font-body text-xs text-luxury-gold text-center mb-2">Enter destination</p>
-                        <input
-                          autoFocus
-                          type="text"
-                          value={customDest}
-                          onChange={e => setCustomDest(e.target.value)}
-                          placeholder="e.g. Tokyo, Japan"
-                          className="input-luxury w-full text-center"
-                          style={{ fontSize: '0.9rem' }}
-                          onKeyDown={e => e.key === 'Enter' && e.target.blur()}
-                        />
-                        {customDest && <p className="font-body text-[10px] text-luxury-gold text-center mt-1">✓ Custom</p>}
-                      </div>
-                    ) : (
-                      <div className="text-center"><span className="text-2xl block mb-1">+</span><span className="font-body text-xs text-white/40">Custom</span></div>
-                    )}
-                  </motion.div>
+                  {showCustom ? (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="col-span-2 sm:col-span-1 h-40 rounded-3xl glass p-4 flex flex-col justify-center border border-luxury-gold/50 shadow-gold-glow">
+                      <label className="font-body text-[10px] text-white/50 uppercase tracking-wider mb-2 text-center">Custom Destination</label>
+                      <input type="text" value={dest} onChange={e => { setDest(e.target.value); setBgImg(''); }} placeholder="Where to?" className="w-full bg-transparent border-b border-white/20 text-center font-display text-xl text-luxury-white focus:outline-none focus:border-luxury-gold pb-1 mb-3" autoFocus />
+                      <button onClick={() => setShowCustom(false)} className="text-[10px] uppercase tracking-widest font-semibold text-luxury-gold hover:text-luxury-white transition-colors">Done</button>
+                    </motion.div>
+                  ) : (
+                    <motion.div whileHover={{ y: -4 }} onClick={() => setShowCustom(true)} className="h-40 rounded-3xl glass flex items-center justify-center cursor-pointer hover:border-luxury-gold/20 transition-all duration-300">
+                      <div className="text-center"><span className="text-2xl block mb-1 text-white/60">+</span><span className="font-body text-xs text-white/40">Custom</span></div>
+                    </motion.div>
+                  )}
                 </div>
               </motion.div>
             )}
@@ -128,11 +116,11 @@ export default function CreateTrip() {
                   <p className="font-body text-sm text-white/40">What kind of journey speaks to you?</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto">
-                  {moods.map(m => (
+                  {moods.map((m, i) => (
                     <motion.div key={m.id} whileHover={{ y: -4 }} onClick={() => setMood(m.id)}
-                      className={`glass p-6 rounded-2xl cursor-pointer text-center transition-all duration-500 ${
+                      className={`glass p-6 rounded-3xl cursor-pointer text-center transition-all duration-500 ${i % 2 === 0 ? '' : 'animation-delay-500'} ${
                         mood === m.id ? 'border-luxury-gold bg-luxury-gold/10 shadow-gold-glow' : 'hover:border-white/20'}`}>
-                      <div className={`mx-auto mb-3 ${mood === m.id ? 'text-luxury-gold' : 'text-white/40'}`}>{m.icon}</div>
+                      <div className={`mx-auto mb-3 flex justify-center ${mood === m.id ? 'text-luxury-gold' : 'text-white/40'}`}>{m.icon}</div>
                       <h3 className="font-body text-sm font-semibold text-luxury-white mb-1">{m.label}</h3>
                       <p className="font-body text-[10px] text-white/40">{m.desc}</p>
                     </motion.div>
@@ -148,14 +136,23 @@ export default function CreateTrip() {
                   <p className="font-body text-sm text-white/40">Finalize your journey</p>
                 </div>
                 <div className="glass-elevated p-8 rounded-2xl max-w-lg mx-auto space-y-5">
-                  <div><label className="font-body text-xs text-white/50 uppercase tracking-wider mb-2 block">Trip Name</label><input type="text" value={tripName || `${effectiveDest || 'Dream'} Adventure`} onChange={e => setTripName(e.target.value)} className="input-luxury" /></div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div><label className="font-body text-xs text-white/50 uppercase tracking-wider mb-2 block">Start Date</label><input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="input-luxury" /></div>
-                    <div><label className="font-body text-xs text-white/50 uppercase tracking-wider mb-2 block">End Date</label><input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="input-luxury" /></div>
+                  <div>
+                    <label className="font-body text-xs text-white/50 uppercase tracking-wider mb-2 block">Trip Name</label>
+                    <input type="text" value={tripName || `${dest || 'Dream'} Adventure`} onChange={e => setTripName(e.target.value)} className="input-luxury" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div><label className="font-body text-xs text-white/50 uppercase tracking-wider mb-2 block">Travelers</label><input type="number" defaultValue={2} min={1} className="input-luxury" /></div>
-                    <div><label className="font-body text-xs text-white/50 uppercase tracking-wider mb-2 block">Budget (USD)</label><input type="number" value={budget} onChange={e => setBudget(e.target.value)} min="0" className="input-luxury" /></div>
+                    <div>
+                      <label className="font-body text-xs text-white/50 uppercase tracking-wider mb-2 block">Start Date</label>
+                      <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="input-luxury" />
+                    </div>
+                    <div>
+                      <label className="font-body text-xs text-white/50 uppercase tracking-wider mb-2 block">End Date</label>
+                      <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="input-luxury" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="font-body text-xs text-white/50 uppercase tracking-wider mb-2 block">Budget (USD)</label>
+                    <input type="number" value={budget} onChange={e => setBudget(e.target.value)} min="0" className="input-luxury" />
                   </div>
                 </div>
               </motion.div>
@@ -163,14 +160,19 @@ export default function CreateTrip() {
           </AnimatePresence>
 
           <div className="flex items-center justify-between mt-12">
-            <button onClick={() => step > 0 && setStep(step - 1)}
+            <motion.button whileTap={step > 0 ? { scale: 0.95 } : {}} onClick={() => step > 0 && setStep(step - 1)}
               className={`flex items-center gap-2 font-body text-sm transition-all duration-300 ${step > 0 ? 'text-white/60 hover:text-luxury-white cursor-pointer' : 'text-white/10 cursor-default'}`}>
               <ArrowLeft className="w-4 h-4" /> Back
-            </button>
+            </motion.button>
             {step < 2 ? (
-              <button onClick={() => setStep(step + 1)} className="btn-primary"><span>Continue</span><ArrowRight className="w-4 h-4" /></button>
+              <motion.button whileTap={{ scale: 0.95 }} onClick={() => setStep(step + 1)} className="btn-primary">
+                <span>Continue</span><ArrowRight className="w-4 h-4" />
+              </motion.button>
             ) : (
-              <button onClick={handleCreate} className="btn-primary"><Sparkles className="w-4 h-4" />Create Trip</button>
+              <motion.button whileTap={{ scale: 0.95 }} onClick={handleCreate} disabled={creating} className="btn-primary">
+                <Sparkles className="w-4 h-4" />
+                {creating ? 'Creating...' : 'Create Trip'}
+              </motion.button>
             )}
           </div>
         </div>

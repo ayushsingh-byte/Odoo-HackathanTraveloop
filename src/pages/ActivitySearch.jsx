@@ -40,10 +40,17 @@ export default function ActivitySearch() {
             </div>
             <div className="flex gap-2 overflow-x-auto no-scrollbar w-full md:w-auto">
               {categories.map(c => (
-                <button key={c} onClick={() => setActive(c)}
+                <motion.button 
+                  key={c} 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setActive(c)}
                   className={`px-4 py-2.5 rounded-full font-body text-xs whitespace-nowrap transition-all duration-300 ${
                     active === c ? 'bg-luxury-gold text-luxury-black font-semibold' : 'glass text-white/60 hover:text-luxury-white'
-                  }`}>{c}</button>
+                  }`}
+                >
+                  {c}
+                </motion.button>
               ))}
             </div>
           </motion.div>
@@ -57,25 +64,27 @@ export default function ActivitySearch() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((act, i) => (
               <motion.div key={act.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} whileHover={{ y: -6 }} className="group cursor-pointer">
-                <div className="relative h-52 rounded-t-2xl overflow-hidden">
-                  <img src={act.image} alt={act.name} className="img-cover transition-transform duration-700 group-hover:scale-110" />
-                  <div className="absolute inset-0 overlay-cinematic" />
-                  <div className="absolute top-3 left-3">
-                    <span className="px-3 py-1 rounded-full glass text-[10px] font-body uppercase tracking-wider text-white/70">{act.category}</span>
-                  </div>
-                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="flex items-center gap-1 glass px-2 py-1 rounded-full"><Clock className="w-3 h-3 text-white/50" /><span className="font-body text-[10px] text-white/70">{act.duration}</span></span>
-                      <span className="flex items-center gap-1 glass px-2 py-1 rounded-full"><DollarSign className="w-3 h-3 text-luxury-gold" /><span className="font-body text-[10px] text-white/70">{act.price}</span></span>
+                <Link to="/timeline">
+                  <div className="relative h-52 rounded-t-2xl overflow-hidden">
+                    <img src={act.image} alt={act.name} className="img-cover transition-transform duration-700 group-hover:scale-110" />
+                    <div className="absolute inset-0 overlay-cinematic" />
+                    <div className="absolute top-3 left-3">
+                      <span className="px-3 py-1 rounded-full glass text-[10px] font-body uppercase tracking-wider text-white/70">{act.category}</span>
+                    </div>
+                    <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="flex items-center gap-1 glass px-2 py-1 rounded-full"><Clock className="w-3 h-3 text-white/50" /><span className="font-body text-[10px] text-white/70">{act.duration}</span></span>
+                        <span className="flex items-center gap-1 glass px-2 py-1 rounded-full"><DollarSign className="w-3 h-3 text-luxury-gold" /><span className="font-body text-[10px] text-white/70">{act.price}</span></span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="glass-elevated rounded-b-2xl p-5 rounded-t-none">
-                  <h3 className="font-display text-lg font-semibold text-luxury-white mb-1">{act.name}</h3>
-                  <div className="flex items-center gap-1.5 mb-2"><MapPin className="w-3 h-3 text-luxury-gold" /><span className="font-body text-xs text-white/50">{act.city}</span></div>
-                  <p className="font-body text-xs text-white/40 line-clamp-2">{act.description}</p>
-                  <div className="flex items-center gap-1 mt-3"><Star className="w-3 h-3 text-luxury-gold fill-luxury-gold" /><span className="font-body text-xs text-luxury-white">{act.rating}</span></div>
-                </div>
+                  <div className="glass-elevated rounded-b-2xl p-5 rounded-t-none">
+                    <h3 className="font-display text-lg font-semibold text-luxury-white mb-1">{act.name}</h3>
+                    <div className="flex items-center gap-1.5 mb-2"><MapPin className="w-3 h-3 text-luxury-gold" /><span className="font-body text-xs text-white/50">{act.city}</span></div>
+                    <p className="font-body text-xs text-white/40 line-clamp-2">{act.description}</p>
+                    <div className="flex items-center gap-1 mt-3"><Star className="w-3 h-3 text-luxury-gold fill-luxury-gold" /><span className="font-body text-xs text-luxury-white">{act.rating}</span></div>
+                  </div>
+                </Link>
               </motion.div>
             ))}
           </div>
