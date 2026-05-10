@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traveloop — Packing Checklist</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container navbar-inner">
+    <a href="/dashboard.html" class="navbar-brand">✈ Traveloop</a>
+    <ul class="navbar-nav">
+      <li><a href="/dashboard.html">Home</a></li>
+      <li><a href="/trips.html">My Trips</a></li>
+      <li><a href="/profile.html" id="nav-user">Profile</a></li>
+      <li><button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container" style="max-width:720px">
+  <div class="page-header flex items-center justify-between">
+    <div>
+      <h1>Packing Checklist</h1>
+      <p id="trip-subtitle"></p>
+    </div>
+    <div class="flex gap-1">
+      <button class="btn btn-secondary" onclick="resetAll()">Reset All</button>
+      <a id="back-link" href="#" class="btn btn-secondary">← Back</a>
+    </div>
+  </div>
+
+  <div id="alert" class="alert" style="display:none;"></div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="flex items-center justify-between mb-1">
+        <strong id="progress-text">0/0 packed</strong>
+        <span id="progress-pct" class="badge badge-primary">0%</span>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progress-bar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h3 class="mb-2">Add Item</h3>
+      <div class="flex gap-2">
+        <input type="text" id="item-name" class="form-control" placeholder="Passport, Laptop charger..." style="flex:1">
+        <select id="item-category" class="form-control" style="max-width:160px">
+          <option value="">Category</option>
+        </select>
+        <button class="btn btn-primary" onclick="addItem()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="checklist-content"><div class="spinner"></div></div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+  const tripId = getParam('id');
+  let allItems = [];
+  let categories = [];
+
+  (async () => {
+    const user = await checkAuth();
+    if (!user) return;
+    setNavUser(user);
+    if (!tripId) return window.location.href = 'trips.html';
+    document.getElementById('back-link').href = `/trip-view.html?id=${tripId}`;
+
+    const catData = await API.get('/api/checklist/categories/all');
+    categories = catData.categories || [];
+    const catSel = document.getElementById('item-category');
+    categories.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.category_id;
+      opt.textContent = c.category_name;
+      catSel.appendChild(opt);
+    });
+
+    const tripData = await API.get(`/api/trips/${tripId}`);
+    if (tripData.trip) document.getElementById('trip-subtitle').textContent = tripData.trip.title;
+
+    await loadChecklist();
+  })();
+
+  async function loadChecklist() {
+    const data = await API.get(`/api/checklist/${tripId}`);
+    allItems = data.items || [];
+    const packed = allItems.filter(i => i.is_packed).length;
+    const total = allItems.length;
+    const pct = total === 0 ? 0 : Math.round((packed / total) * 100);
+
+    document.getElementById('progress-text').textContent = `${packed}/${total} packed`;
+    document.getElementById('progress-pct').textContent  = `${pct}%`;
+    document.getElementById('progress-bar').style.width  = `${pct}%`;
+
+    renderChecklist();
+  }
+
+  function renderChecklist() {
+    const el = document.getElementById('checklist-content');
+    if (allItems.length === 0) {
+      el.innerHTML = '<div class="empty-state"><h3>No items yet</h3><p>Add items you need to pack above.</p></div>';
+      return;
+    }
+
+    const grouped = {};
+    allItems.forEach(item => {
+      const cat = item.category_name || 'Other';
+      if (!grouped[cat]) grouped[cat] = [];
+      grouped[cat].push(item);
+    });
+
+    el.innerHTML = Object.entries(grouped).map(([cat, items]) => {
+      const packedCount = items.filter(i => i.is_packed).length;
+      return `<div class="card mb-2">
+        <div class="card-body">
+          <div class="flex items-center justify-between mb-1">
+            <h3>${cat}</h3>
+            <span class="badge badge-gray">${packedCount}/${items.length}</span>
+          </div>
+          ${items.map(item => `
+            <div class="checklist-item ${item.is_packed ? 'packed' : ''}">
+              <input type="checkbox" id="item-${item.item_id}" ${item.is_packed ? 'checked' : ''}
+                     onchange="toggleItem(${item.item_id})">
+              <label for="item-${item.item_id}">${item.item_name}</label>
+              <button class="btn btn-danger btn-sm" onclick="deleteItem(${item.item_id})">✕</button>
+            </div>`).join('')}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  async function addItem() {
+    const name = document.getElementById('item-name').value.trim();
+    const catId = document.getElementById('item-category').value;
+    if (!name) return showAlert('Enter item name');
+    const data = await API.post(`/api/checklist/${tripId}`, {
+      item_name: name,
+      category_id: catId || null
+    });
+    if (data.error) return showAlert(data.error);
+    document.getElementById('item-name').value = '';
+    await loadChecklist();
+  }
+
+  async function toggleItem(itemId) {
+    await API.patch(`/api/checklist/${tripId}/${itemId}/toggle`, {});
+    await loadChecklist();
+  }
+
+  async function deleteItem(itemId) {
+    await API.del(`/api/checklist/${tripId}/${itemId}`);
+    await loadChecklist();
+  }
+
+  async function resetAll() {
+    if (!confirm('Mark all items as unpacked?')) return;
+    await API.post(`/api/checklist/${tripId}/reset`, {});
+    await loadChecklist();
+    showAlert('Checklist reset', 'success');
+  }
+
+  async function logout() {
+    await API.post('/api/auth/logout', {});
+    window.location.href = 'index.html';
+  }
+</script>
+</body>
+</html>

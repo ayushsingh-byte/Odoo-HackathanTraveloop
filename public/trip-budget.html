@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traveloop — Budget</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container navbar-inner">
+    <a href="/dashboard.html" class="navbar-brand">✈ Traveloop</a>
+    <ul class="navbar-nav">
+      <li><a href="/dashboard.html">Home</a></li>
+      <li><a href="/trips.html">My Trips</a></li>
+      <li><a href="/profile.html" id="nav-user">Profile</a></li>
+      <li><button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header flex items-center justify-between">
+    <div>
+      <h1 id="trip-title">Budget</h1>
+      <p>Track spending by category</p>
+    </div>
+    <a id="back-link" href="#" class="btn btn-secondary">← Back to Trip</a>
+  </div>
+
+  <div id="alert" class="alert" style="display:none;"></div>
+  <div id="over-budget" class="over-budget-banner" style="display:none;">⚠ Over Budget! You have exceeded your travel budget.</div>
+
+  <div class="grid grid-2 mb-3">
+    <div class="stat-card">
+      <div class="stat-value" id="stat-budget">—</div>
+      <div class="stat-label">Total Budget</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-spent">—</div>
+      <div class="stat-label">Total Spent</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-remaining">—</div>
+      <div class="stat-label">Remaining</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-daily">—</div>
+      <div class="stat-label">Avg per Day</div>
+    </div>
+  </div>
+
+  <div class="grid grid-2 mb-3">
+    <div class="card">
+      <div class="card-body">
+        <h3 class="mb-2">Spending Breakdown</h3>
+        <canvas id="pie-chart" height="220"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <h3 class="mb-2">By Category</h3>
+        <canvas id="bar-chart" height="220"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h3 class="mb-2">Update Budget</h3>
+      <div class="grid grid-2">
+        <div class="form-group">
+          <label class="form-label">Total Budget</label>
+          <input type="number" id="f-total-budget" class="form-control" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Currency</label>
+          <select id="f-currency" class="form-control">
+            <option>USD</option><option>EUR</option><option>GBP</option>
+            <option>JPY</option><option>INR</option><option>AUD</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Transport Cost</label>
+          <input type="number" id="f-transport" class="form-control" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stay Cost</label>
+          <input type="number" id="f-stay" class="form-control" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Food Cost</label>
+          <input type="number" id="f-food" class="form-control" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Activity Cost</label>
+          <input type="number" id="f-activity" class="form-control" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Misc Cost</label>
+          <input type="number" id="f-misc" class="form-control" min="0">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="saveBudget()">Save Budget</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+  const tripId = getParam('id');
+  let pieChart, barChart;
+  const COLORS = ['#6c63ff','#f5a623','#22c55e','#ef4444','#a78bfa'];
+  const LABELS = ['Transport','Stay','Food','Activities','Misc'];
+
+  (async () => {
+    const user = await checkAuth();
+    if (!user) return;
+    setNavUser(user);
+    if (!tripId) return window.location.href = 'trips.html';
+    document.getElementById('back-link').href = `/trip-view.html?id=${tripId}`;
+    const tripData = await API.get(`/api/trips/${tripId}`);
+    if (tripData.trip) document.getElementById('trip-title').textContent = `${tripData.trip.title} — Budget`;
+    await loadBudget();
+  })();
+
+  async function loadBudget() {
+    const data = await API.get(`/api/budget/${tripId}`);
+    if (data.error) return;
+    const b = data.budget;
+    const currency = b.currency || 'USD';
+
+    document.getElementById('f-total-budget').value = b.total_budget;
+    document.getElementById('f-transport').value    = b.transport_cost;
+    document.getElementById('f-stay').value         = b.stay_cost;
+    document.getElementById('f-food').value         = b.food_cost;
+    document.getElementById('f-activity').value     = b.activity_cost;
+    document.getElementById('f-misc').value         = b.misc_cost;
+    document.getElementById('f-currency').value     = currency;
+
+    document.getElementById('stat-budget').textContent    = fmtMoney(b.total_budget, currency);
+    document.getElementById('stat-spent').textContent     = fmtMoney(b.total_cost, currency);
+    const remEl = document.getElementById('stat-remaining');
+    remEl.textContent = fmtMoney(b.remaining, currency);
+    remEl.className   = `stat-value ${b.remaining < 0 ? 'text-danger' : 'text-success'}`;
+    document.getElementById('stat-daily').textContent = fmtMoney(b.total_cost / 7, currency);
+
+    if (b.over_budget) document.getElementById('over-budget').style.display = 'flex';
+    else               document.getElementById('over-budget').style.display = 'none';
+
+    const vals = [b.transport_cost, b.stay_cost, b.food_cost, b.activity_cost, b.misc_cost];
+
+    if (pieChart) pieChart.destroy();
+    pieChart = new Chart(document.getElementById('pie-chart'), {
+      type: 'doughnut',
+      data: { labels: LABELS, datasets: [{ data: vals, backgroundColor: COLORS, borderWidth: 0 }] },
+      options: { plugins: { legend: { position: 'bottom' } }, cutout: '60%' }
+    });
+
+    if (barChart) barChart.destroy();
+    barChart = new Chart(document.getElementById('bar-chart'), {
+      type: 'bar',
+      data: { labels: LABELS, datasets: [{ data: vals, backgroundColor: COLORS, borderRadius: 6 }] },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+  }
+
+  async function saveBudget() {
+    const data = await API.put(`/api/budget/${tripId}`, {
+      total_budget:   parseFloat(document.getElementById('f-total-budget').value) || 0,
+      transport_cost: parseFloat(document.getElementById('f-transport').value) || 0,
+      stay_cost:      parseFloat(document.getElementById('f-stay').value) || 0,
+      food_cost:      parseFloat(document.getElementById('f-food').value) || 0,
+      activity_cost:  parseFloat(document.getElementById('f-activity').value) || 0,
+      misc_cost:      parseFloat(document.getElementById('f-misc').value) || 0,
+      currency:       document.getElementById('f-currency').value
+    });
+    if (data.error) return showAlert(data.error);
+    showAlert('Budget updated', 'success');
+    await loadBudget();
+  }
+
+  async function logout() {
+    await API.post('/api/auth/logout', {});
+    window.location.href = 'index.html';
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traveloop — Trip Notes</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container navbar-inner">
+    <a href="/dashboard.html" class="navbar-brand">✈ Traveloop</a>
+    <ul class="navbar-nav">
+      <li><a href="/dashboard.html">Home</a></li>
+      <li><a href="/trips.html">My Trips</a></li>
+      <li><a href="/profile.html" id="nav-user">Profile</a></li>
+      <li><button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container" style="max-width:760px">
+  <div class="page-header flex items-center justify-between">
+    <div>
+      <h1>Trip Notes</h1>
+      <p id="trip-subtitle"></p>
+    </div>
+    <div class="flex gap-1">
+      <button class="btn btn-primary" onclick="openAddNote()">+ Add Note</button>
+      <a id="back-link" href="#" class="btn btn-secondary">← Back</a>
+    </div>
+  </div>
+
+  <div id="alert" class="alert" style="display:none;"></div>
+
+  <div class="tab-bar">
+    <button class="active" onclick="filterNotes('all')">All</button>
+    <button onclick="filterNotes('trip')">Trip Level</button>
+    <button onclick="filterNotes('stop')">By Stop</button>
+  </div>
+
+  <div id="stop-filter" class="form-group" style="display:none">
+    <select id="stop-select" class="form-control" onchange="loadNotes()">
+      <option value="">All Stops</option>
+    </select>
+  </div>
+
+  <div id="notes-list"><div class="spinner"></div></div>
+</div>
+
+<div id="note-modal" class="modal-overlay" style="display:none;">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="note-modal-title">Add Note</h3>
+      <button class="modal-close" onclick="closeNoteModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Title</label>
+        <input type="text" id="note-title" class="form-control" placeholder="Hotel check-in, reminder...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Attach to Stop (optional)</label>
+        <select id="note-stop" class="form-control">
+          <option value="">Trip-level note</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Note</label>
+        <textarea id="note-content" class="form-control" rows="5" placeholder="Your notes..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeNoteModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNote()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+  const tripId = getParam('id');
+  let stops = [];
+  let currentFilter = 'all';
+  let editingNoteId = null;
+
+  (async () => {
+    const user = await checkAuth();
+    if (!user) return;
+    setNavUser(user);
+    if (!tripId) return window.location.href = 'trips.html';
+    document.getElementById('back-link').href = `/trip-view.html?id=${tripId}`;
+
+    const tripData = await API.get(`/api/trips/${tripId}`);
+    if (tripData.trip) document.getElementById('trip-subtitle').textContent = tripData.trip.title;
+    stops = tripData.stops || [];
+
+    const stopSel = document.getElementById('stop-select');
+    const noteStopSel = document.getElementById('note-stop');
+    stops.forEach(s => {
+      [stopSel, noteStopSel].forEach(sel => {
+        const opt = document.createElement('option');
+        opt.value = s.stop_id;
+        opt.textContent = s.city_name;
+        sel.appendChild(opt);
+      });
+    });
+
+    await loadNotes();
+  })();
+
+  function filterNotes(filter) {
+    currentFilter = filter;
+    document.querySelectorAll('.tab-bar button').forEach((b, i) => {
+      b.classList.toggle('active', ['all','trip','stop'][i] === filter);
+    });
+    document.getElementById('stop-filter').style.display = filter === 'stop' ? 'block' : 'none';
+    loadNotes();
+  }
+
+  async function loadNotes() {
+    let url = `/api/notes/${tripId}`;
+    if (currentFilter === 'trip') url += '?stop_id=null';
+    else if (currentFilter === 'stop') {
+      const stopId = document.getElementById('stop-select').value;
+      if (stopId) url += `?stop_id=${stopId}`;
+    }
+    const data = await API.get(url);
+    renderNotes(data.notes || []);
+  }
+
+  function renderNotes(notes) {
+    const el = document.getElementById('notes-list');
+    if (notes.length === 0) {
+      el.innerHTML = '<div class="empty-state"><h3>No notes yet</h3><p>Add a note to remember important details about your trip.</p></div>';
+      return;
+    }
+    el.innerHTML = notes.map(n => `
+      <div class="note-card">
+        <div class="note-meta">
+          ${n.city_name ? `<span class="badge badge-primary">${n.city_name}</span> · ` : '<span class="badge badge-gray">Trip Note</span> · '}
+          ${fmt(n.created_at)}
+        </div>
+        ${n.note_title ? `<h3 style="margin-bottom:0.4rem">${n.note_title}</h3>` : ''}
+        <p style="font-size:0.9rem;white-space:pre-wrap">${n.note_content || ''}</p>
+        <div class="flex gap-1 mt-2">
+          <button class="btn btn-secondary btn-sm" onclick="openEditNote(${n.note_id}, '${escStr(n.note_title)}', '${escStr(n.note_content)}', ${n.stop_id || 'null'})">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteNote(${n.note_id})">Delete</button>
+        </div>
+      </div>`).join('');
+  }
+
+  function escStr(s) {
+    return (s || '').replace(/'/g, "\\'").replace(/\n/g, '\\n');
+  }
+
+  function openAddNote() {
+    editingNoteId = null;
+    document.getElementById('note-modal-title').textContent = 'Add Note';
+    document.getElementById('note-title').value = '';
+    document.getElementById('note-content').value = '';
+    document.getElementById('note-stop').value = '';
+    document.getElementById('note-modal').style.display = 'flex';
+  }
+
+  function openEditNote(id, title, content, stopId) {
+    editingNoteId = id;
+    document.getElementById('note-modal-title').textContent = 'Edit Note';
+    document.getElementById('note-title').value = title;
+    document.getElementById('note-content').value = content.replace(/\\n/g, '\n');
+    document.getElementById('note-stop').value = stopId || '';
+    document.getElementById('note-modal').style.display = 'flex';
+  }
+
+  function closeNoteModal() {
+    document.getElementById('note-modal').style.display = 'none';
+    editingNoteId = null;
+  }
+
+  async function saveNote() {
+    const payload = {
+      note_title: document.getElementById('note-title').value || null,
+      note_content: document.getElementById('note-content').value || null,
+      stop_id: document.getElementById('note-stop').value || null
+    };
+    let data;
+    if (editingNoteId) {
+      data = await API.put(`/api/notes/${tripId}/${editingNoteId}`, payload);
+    } else {
+      data = await API.post(`/api/notes/${tripId}`, payload);
+    }
+    if (data.error) return showAlert(data.error);
+    closeNoteModal();
+    await loadNotes();
+  }
+
+  async function deleteNote(noteId) {
+    if (!confirm('Delete this note?')) return;
+    await API.del(`/api/notes/${tripId}/${noteId}`);
+    await loadNotes();
+  }
+
+  async function logout() {
+    await API.post('/api/auth/logout', {});
+    window.location.href = 'index.html';
+  }
+</script>
+</body>
+</html>
