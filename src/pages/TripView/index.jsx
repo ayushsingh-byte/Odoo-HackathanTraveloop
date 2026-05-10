@@ -54,19 +54,27 @@ export default function TripView() {
     </div>
   );
 
+  const S = {
+    pageCard: { background: '#1c1c2e', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: '1.5rem', marginBottom: '1.5rem' },
+    tabBtn: (active) => ({ padding: '0.55rem 1.25rem', borderRadius: 20, border: `1px solid ${active ? 'rgba(201,168,76,0.4)' : 'rgba(255,255,255,0.1)'}`, background: active ? 'rgba(201,168,76,0.12)' : 'transparent', color: active ? '#c9a84c' : 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '0.875rem', fontWeight: active ? 600 : 400, transition: 'all 0.2s' }),
+    actRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.75rem', background: 'rgba(255,255,255,0.05)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' },
+    emptyCard: { background: '#1c1c2e', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: '3rem 2rem', textAlign: 'center', marginTop: '1rem' },
+  };
+
   return (
     <div className="dark-trip-page" style={{ background: '#0a0a0a', minHeight: '100vh', paddingTop: '2rem' }}>
     <div className="container">
       {alert && <div className={`alert alert-${alert.type}`}>{alert.msg}</div>}
       {tripSubNav}
-      <div className="page-header">
-        <div className="flex items-center justify-between">
+
+      <div style={S.pageCard}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <h1>{trip.title}</h1>
-            <p className="text-muted">{fmt(trip.start_date)} — {fmt(trip.end_date)}</p>
+            <h1 style={{ color: '#f8fafc', marginBottom: '0.25rem' }}>{trip.title}</h1>
+            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem' }}>{fmt(trip.start_date)} — {fmt(trip.end_date)}</p>
           </div>
-          <div className="flex gap-1">
-            <Link to={`/trip/builder?id=${tripId}`} className="btn btn-secondary">Edit Itinerary</Link>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <Link to={`/trip/builder?id=${tripId}`} className="btn btn-secondary">Edit</Link>
             <Link to={`/trip/budget?id=${tripId}`} className="btn btn-secondary">Budget</Link>
             <Link to={`/trip/checklist?id=${tripId}`} className="btn btn-secondary">Checklist</Link>
             <Link to={`/trip/notes?id=${tripId}`} className="btn btn-secondary">Notes</Link>
@@ -75,23 +83,24 @@ export default function TripView() {
           </div>
         </div>
         {shareResult && (
-          <div className="alert alert-success" style={{ marginTop: '0.75rem' }}>
-            Link: <a href={shareResult} target="_blank" rel="noreferrer">{shareResult}</a>
+          <div style={{ marginTop: '0.75rem', padding: '0.6rem 1rem', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8, color: '#4ade80', fontSize: '0.875rem' }}>
+            🔗 <a href={shareResult} target="_blank" rel="noreferrer" style={{ color: '#4ade80' }}>{shareResult}</a>
           </div>
         )}
       </div>
 
-      <div className="tab-bar">
-        <button className={view === 'timeline' ? 'active' : ''} onClick={() => setView('timeline')}>Timeline</button>
-        <button className={view === 'list' ? 'active' : ''} onClick={() => setView('list')}>List View</button>
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
+        <button style={S.tabBtn(view === 'timeline')} onClick={() => setView('timeline')}>Timeline</button>
+        <button style={S.tabBtn(view === 'list')} onClick={() => setView('list')}>List View</button>
       </div>
 
-      <div id="itinerary-content">
+      <div>
         {stops.length === 0 ? (
-          <div className="empty-state">
-            <h3>No stops yet</h3>
-            <p>Add cities in the builder to build your itinerary.</p>
-            <Link to={`/trip/builder?id=${tripId}`} className="btn btn-primary mt-2">Open Builder</Link>
+          <div style={S.emptyCard}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🗺️</div>
+            <h3 style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '0.5rem' }}>No stops yet</h3>
+            <p style={{ color: 'rgba(255,255,255,0.4)', marginBottom: '1.5rem' }}>Add cities in the builder to build your itinerary.</p>
+            <Link to={`/trip/builder?id=${tripId}`} className="btn btn-primary">Open Builder</Link>
           </div>
         ) : view === 'timeline' ? (
           <div className="timeline">
@@ -116,7 +125,7 @@ export default function TripView() {
                           <p className="text-muted mb-1" style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Activities</p>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                             {s.activities.map((a, i) => (
-                              <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.75rem', background: '#f8f9ff', borderRadius: 8 }}>
+                              <div key={i} style={S.actRow}>
                                 <div>
                                   <span className="activity-chip">{a.category_name}</span>
                                   <strong style={{ marginLeft: '0.4rem', fontSize: '0.9rem' }}>{a.activity_name}</strong>
@@ -154,3 +163,4 @@ export default function TripView() {
     </div>
   );
 }
+
