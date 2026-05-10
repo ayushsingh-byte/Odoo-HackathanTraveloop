@@ -4,125 +4,300 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Traveloop — Login</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #6c63ff 0%, #a78bfa 100%); }
-    .auth-box { background: #fff; border-radius: 20px; padding: 2.5rem; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
-    .auth-logo { text-align: center; margin-bottom: 2rem; }
-    .auth-logo h1 { color: #6c63ff; font-size: 2rem; font-weight: 800; }
-    .auth-logo p { color: #6b7280; font-size: 0.9rem; }
-    .auth-tabs { display: flex; margin-bottom: 1.75rem; border-bottom: 2px solid #e5e7eb; }
-    .auth-tabs button { flex: 1; padding: 0.6rem; border: none; background: none; font-size: 0.95rem; font-weight: 600; color: #6b7280; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
-    .auth-tabs button.active { color: #6c63ff; border-bottom-color: #6c63ff; }
-    .auth-footer { text-align: center; margin-top: 1rem; font-size: 0.85rem; color: #6b7280; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.25)), url('bg_login.png') no-repeat center center / cover;
+    }
+    body.register-bg {
+      background: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.25)), url('bg_register.jpg') no-repeat center center / cover;
+    }
+
+    @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px 4%;
+    }
+    .logo { font-size: 20px; font-weight: 700; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+    .logo i { font-size: 22px; }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0 1rem 3rem;
+    }
+
+    .hero-text {
+      text-align: center;
+      margin-bottom: 28px;
+      text-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      animation: fadeIn 1.2s ease-out;
+    }
+    .hero-text h1 {
+      font-size: clamp(38px, 8vw, 88px);
+      font-weight: 700;
+      letter-spacing: clamp(8px, 2vw, 20px);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .hero-text p { font-size: 13px; font-weight: 500; letter-spacing: 3px; color: #e5e7eb; }
+
+    .glass-card {
+      width: 100%;
+      max-width: 440px;
+      padding: 36px 32px;
+      border-radius: 20px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: rgba(15,15,15,0.5);
+      border: 1px solid rgba(255,255,255,0.15);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      animation: slideUp 0.7s ease-out forwards;
+    }
+    .glass-card.wide { max-width: 620px; }
+
+    .auth-tabs {
+      display: flex;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+      margin-bottom: 24px;
+    }
+    .auth-tabs button {
+      flex: 1; padding: 10px; background: none; border: none;
+      color: rgba(255,255,255,0.45); font-family: 'Outfit', sans-serif;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s;
+    }
+    .auth-tabs button.active { color: white; border-bottom-color: white; }
+
+    .form-subtitle { font-size: 13px; color: #d1d5db; font-weight: 300; margin-bottom: 22px; }
+
+    .input-group { position: relative; margin-bottom: 16px; }
+    .input-group i.icon-left {
+      position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
+      color: #9ca3af; font-size: 14px;
+    }
+    .input-group i.icon-right {
+      position: absolute; right: 18px; top: 50%; transform: translateY(-50%);
+      color: #9ca3af; font-size: 14px; cursor: pointer;
+    }
+    .input-group i.icon-right:hover { color: white; }
+
+    input, textarea {
+      width: 100%; padding: 14px 18px; border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.2); outline: none;
+      background: rgba(0,0,0,0.2); color: white;
+      font-family: 'Outfit', sans-serif; font-size: 14px; transition: all 0.3s;
+    }
+    .has-icon-left input { padding-left: 48px; }
+    .has-icon-right input { padding-right: 48px; }
+    input::placeholder, textarea::placeholder { color: #9ca3af; font-weight: 300; }
+    input:focus, textarea:focus { border-color: rgba(255,255,255,0.5); background: rgba(0,0,0,0.3); }
+    textarea { resize: vertical; min-height: 80px; }
+
+    .forgot {
+      display: block; text-align: right; font-size: 12px;
+      color: #d1d5db; text-decoration: none;
+      margin-top: -8px; margin-bottom: 20px; transition: color 0.3s;
+    }
+    .forgot:hover { color: white; }
+
+    .submit-btn {
+      width: 100%; padding: 14px; border: none; border-radius: 10px;
+      background: #fdfdfd; color: #111827; font-family: 'Outfit', sans-serif;
+      font-weight: 600; font-size: 15px; cursor: pointer;
+      margin-top: 4px; margin-bottom: 20px; transition: transform 0.2s, background 0.2s;
+    }
+    .submit-btn:hover { transform: translateY(-2px); background: white; }
+    .submit-btn:active { transform: none; }
+
+    .switch-link { font-size: 13px; color: #d1d5db; text-align: center; margin-top: 4px; }
+    .switch-link a { color: white; font-weight: 600; text-decoration: none; cursor: pointer; }
+    .switch-link a:hover { text-decoration: underline; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    .photo-upload {
+      width: 88px; height: 88px; border-radius: 50%;
+      border: 2px dashed rgba(255,255,255,0.4);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 4px; margin: 0 auto 22px; cursor: pointer;
+      background: rgba(0,0,0,0.2); transition: all 0.3s;
+    }
+    .photo-upload:hover { background: rgba(0,0,0,0.4); border-color: white; }
+    .photo-upload i { font-size: 22px; color: rgba(255,255,255,0.7); }
+    .photo-upload span { font-size: 11px; color: rgba(255,255,255,0.6); }
+
+    .alert-glass {
+      padding: 10px 14px; border-radius: 10px;
+      font-size: 13px; margin-bottom: 16px; display: none;
+    }
+    .alert-glass.error   { background: rgba(239,68,68,0.25); border: 1px solid rgba(239,68,68,0.4); }
+    .alert-glass.success { background: rgba(34,197,94,0.25);  border: 1px solid rgba(34,197,94,0.4); }
+
+    @media (max-width: 600px) {
+      .glass-card, .glass-card.wide { padding: 26px 18px; max-width: 95vw; }
+      .form-grid { grid-template-columns: 1fr; }
+      .hero-text { margin-bottom: 18px; }
+    }
   </style>
 </head>
 <body>
-  <div class="auth-box">
-    <div class="auth-logo">
-      <h1>✈ Traveloop</h1>
-      <p>Plan your perfect journey</p>
-    </div>
-    <div id="alert" class="alert" style="display:none;"></div>
+
+<header>
+  <div class="logo"><i class="fas fa-globe"></i> TRAVELOOP</div>
+</header>
+
+<main>
+  <div class="hero-text">
+    <h1>TRAVELOOP</h1>
+    <p>EXPLORE. EXPERIENCE. REMEMBER.</p>
+  </div>
+
+  <div id="auth-card" class="glass-card">
     <div class="auth-tabs">
       <button class="active" onclick="showTab('login')">Login</button>
       <button onclick="showTab('register')">Register</button>
     </div>
 
+    <div id="alert-box" class="alert-glass"></div>
+
     <form id="login-form" onsubmit="handleLogin(event)">
-      <div class="form-group">
-        <label class="form-label">Email</label>
-        <input type="email" id="login-email" class="form-control" placeholder="you@example.com" required>
+      <p class="form-subtitle">Login to continue your journey</p>
+      <div class="input-group has-icon-left">
+        <i class="icon-left far fa-envelope"></i>
+        <input type="email" id="login-email" placeholder="Email address" required>
       </div>
-      <div class="form-group">
-        <label class="form-label">Password</label>
-        <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
+      <div class="input-group has-icon-left has-icon-right">
+        <i class="icon-left fas fa-lock"></i>
+        <input type="password" id="login-password" placeholder="Password" required>
+        <i class="icon-right far fa-eye" onclick="togglePwd('login-password', this)"></i>
       </div>
-      <button type="submit" class="btn btn-primary btn-full btn-lg">Login</button>
+      <a href="#" class="forgot">Forgot Password?</a>
+      <button type="submit" class="submit-btn">Login</button>
+      <p class="switch-link">Don't have an account? <a onclick="showTab('register')">Sign up</a></p>
     </form>
 
-    <form id="register-form" style="display:none;" onsubmit="handleRegister(event)">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
-        <div class="form-group">
-          <label class="form-label">First Name</label>
-          <input type="text" id="reg-fname" class="form-control" placeholder="Jane" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Last Name</label>
-          <input type="text" id="reg-lname" class="form-control" placeholder="Doe" required>
-        </div>
+    <form id="register-form" style="display:none" onsubmit="handleRegister(event)">
+      <div class="photo-upload" onclick="document.getElementById('photo-file').click()">
+        <i class="fas fa-camera"></i>
+        <span>Photo</span>
+        <input type="file" id="photo-file" accept="image/*" style="display:none">
       </div>
-      <div class="form-group">
-        <label class="form-label">Email</label>
-        <input type="email" id="reg-email" class="form-control" placeholder="you@example.com" required>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Phone</label>
-        <input type="tel" id="reg-phone" class="form-control" placeholder="+1 555 000 0000">
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
-        <div class="form-group">
-          <label class="form-label">City</label>
-          <input type="text" id="reg-city" class="form-control" placeholder="New York">
+      <div class="form-grid" style="margin-bottom:14px">
+        <div class="input-group">
+          <input type="text" id="reg-fname" placeholder="First Name" required>
         </div>
-        <div class="form-group">
-          <label class="form-label">Country</label>
-          <input type="text" id="reg-country" class="form-control" placeholder="USA">
+        <div class="input-group">
+          <input type="text" id="reg-lname" placeholder="Last Name" required>
+        </div>
+        <div class="input-group">
+          <input type="email" id="reg-email" placeholder="Email Address" required>
+        </div>
+        <div class="input-group">
+          <input type="tel" id="reg-phone" placeholder="Phone Number">
+        </div>
+        <div class="input-group">
+          <input type="text" id="reg-city" placeholder="City">
+        </div>
+        <div class="input-group">
+          <input type="text" id="reg-country" placeholder="Country">
         </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Additional Info <span class="text-muted">(optional)</span></label>
-        <textarea id="reg-info" class="form-control" rows="2" placeholder="Frequent traveler, photographer..."></textarea>
+      <div class="input-group" style="margin-bottom:14px">
+        <textarea id="reg-info" placeholder="Additional Information (optional)"></textarea>
       </div>
-      <div class="form-group">
-        <label class="form-label">Password</label>
-        <input type="password" id="reg-password" class="form-control" placeholder="Min 6 characters" required minlength="6">
+      <div class="input-group has-icon-left has-icon-right" style="margin-bottom:20px">
+        <i class="icon-left fas fa-lock"></i>
+        <input type="password" id="reg-password" placeholder="Password (min 6 chars)" required minlength="6">
+        <i class="icon-right far fa-eye" onclick="togglePwd('reg-password', this)"></i>
       </div>
-      <button type="submit" class="btn btn-primary btn-full btn-lg">Create Account</button>
+      <button type="submit" class="submit-btn">Create Account</button>
+      <p class="switch-link">Already have an account? <a onclick="showTab('login')">Log in</a></p>
     </form>
   </div>
+</main>
 
-  <script src="js/api.js"></script>
-  <script>
-    (async () => {
-      const data = await fetch('/api/auth/me', { credentials: 'same-origin' }).then(r => r.json()).catch(() => null);
-      if (data && data.user) window.location.href = 'dashboard.html';
-    })();
+<script src="js/api.js"></script>
+<script>
+  (async () => {
+    const data = await fetch('/api/auth/me', { credentials: 'same-origin' }).then(r => r.json()).catch(() => null);
+    if (data && data.user) window.location.href = 'dashboard.html';
+  })();
 
-    function showTab(tab) {
-      document.querySelectorAll('.auth-tabs button').forEach((b, i) => {
-        b.classList.toggle('active', (tab === 'login' && i === 0) || (tab === 'register' && i === 1));
-      });
-      document.getElementById('login-form').style.display    = tab === 'login'    ? 'block' : 'none';
-      document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
+  function showTab(tab) {
+    document.querySelectorAll('.auth-tabs button').forEach((b, i) => {
+      b.classList.toggle('active', (tab === 'login' && i === 0) || (tab === 'register' && i === 1));
+    });
+    document.getElementById('login-form').style.display    = tab === 'login'    ? 'block' : 'none';
+    document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
+    document.getElementById('auth-card').className = tab === 'register' ? 'glass-card wide' : 'glass-card';
+    document.body.className = tab === 'register' ? 'register-bg' : '';
+    clearAlert();
+  }
+
+  function togglePwd(inputId, icon) {
+    const inp = document.getElementById(inputId);
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+      inp.type = 'password';
+      icon.classList.replace('fa-eye-slash', 'fa-eye');
     }
+  }
 
-    async function handleLogin(e) {
-      e.preventDefault();
-      const data = await API.post('/api/auth/login', {
-        email: document.getElementById('login-email').value,
-        password: document.getElementById('login-password').value
-      });
-      if (data.error) return showAlert(data.error);
-      window.location.href = 'dashboard.html';
-    }
+  function showAlert(msg, type = 'error') {
+    const el = document.getElementById('alert-box');
+    el.className = `alert-glass ${type}`;
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
 
-    async function handleRegister(e) {
-      e.preventDefault();
-      const fname = document.getElementById('reg-fname').value.trim();
-      const lname = document.getElementById('reg-lname').value.trim();
-      const data = await API.post('/api/auth/register', {
-        name: `${fname} ${lname}`.trim(),
-        email: document.getElementById('reg-email').value,
-        password: document.getElementById('reg-password').value,
-        phone: document.getElementById('reg-phone').value || null,
-        city_name: document.getElementById('reg-city').value || null,
-        country_name: document.getElementById('reg-country').value || null,
-        additional_info: document.getElementById('reg-info').value || null
-      });
-      if (data.error) return showAlert(data.error);
-      window.location.href = 'dashboard.html';
-    }
-  </script>
+  function clearAlert() {
+    document.getElementById('alert-box').style.display = 'none';
+  }
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    const data = await API.post('/api/auth/login', {
+      email: document.getElementById('login-email').value,
+      password: document.getElementById('login-password').value
+    });
+    if (data.error) return showAlert(data.error);
+    window.location.href = 'dashboard.html';
+  }
+
+  async function handleRegister(e) {
+    e.preventDefault();
+    const fname = document.getElementById('reg-fname').value.trim();
+    const lname = document.getElementById('reg-lname').value.trim();
+    const data = await API.post('/api/auth/register', {
+      name: `${fname} ${lname}`.trim(),
+      email: document.getElementById('reg-email').value,
+      password: document.getElementById('reg-password').value,
+      phone: document.getElementById('reg-phone').value || null,
+      city_name: document.getElementById('reg-city').value || null,
+      country_name: document.getElementById('reg-country').value || null,
+      additional_info: document.getElementById('reg-info').value || null
+    });
+    if (data.error) return showAlert(data.error);
+    window.location.href = 'dashboard.html';
+  }
+</script>
 </body>
 </html>
