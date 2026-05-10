@@ -1,19 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Star, Clock, ArrowUpRight, Filter } from 'lucide-react';
+import { Calendar, MapPin, ArrowUpRight } from 'lucide-react';
 import SectionHeading from '../components/SectionHeading';
-import { featuredTrips } from '../data/mockData';
+import { API } from '../services/api';
 
 const filters = ['All', 'Upcoming', 'In Progress', 'Completed'];
-
-const trips = [
-  { ...featuredTrips[0], status: 'upcoming', dates: 'Oct 15 – Oct 25, 2025' },
-  { ...featuredTrips[1], status: 'completed', dates: 'Aug 5 – Aug 12, 2025' },
-  { ...featuredTrips[2], status: 'in-progress', dates: 'Sep 1 – Sep 6, 2025' },
-  { ...featuredTrips[3], status: 'upcoming', dates: 'Nov 20 – Dec 2, 2025' },
-  { ...featuredTrips[4], status: 'completed', dates: 'Jul 10 – Jul 18, 2025' },
-];
 
 const statusColors = {
   upcoming: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
@@ -23,6 +15,21 @@ const statusColors = {
 
 export default function MyTrips() {
   const [active, setActive] = useState('All');
+  const [trips, setTrips] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    API.get('/api/trips').then(data => {
+      if (!data) return;
+      const all = [
+        ...(data.ongoing || []).map(t => ({ ...t, status: 'in-progress' })),
+        ...(data.upcoming || []).map(t => ({ ...t, status: 'upcoming' })),
+        ...(data.completed || []).map(t => ({ ...t, status: 'completed' })),
+        ...(data.undated || []).map(t => ({ ...t, status: 'upcoming' })),
+      ];
+      setTrips(all);
+    }).finally(() => setLoading(false));
+  }, []);
 
   const filtered = active === 'All' ? trips : trips.filter(t =>
     t.status === active.toLowerCase().replace(' ', '-')
@@ -39,7 +46,6 @@ export default function MyTrips() {
           <Link to="/create-trip" className="btn-primary self-start md:self-auto">+ New Trip</Link>
         </div>
 
-        {/* Filters */}
         <div className="flex items-center gap-3 mb-10 overflow-x-auto no-scrollbar">
           {filters.map(f => (
             <button key={f} onClick={() => setActive(f)}
@@ -49,35 +55,55 @@ export default function MyTrips() {
           ))}
         </div>
 
-        {/* Trip Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((trip, i) => (
-            <motion.div key={trip.id + trip.status} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} whileHover={{ y: -6 }}>
-              <Link to="/timeline" className="group block">
-                <div className="relative h-56 rounded-t-2xl overflow-hidden">
-                  <img src={trip.image} alt={trip.title} className="img-cover transition-transform duration-700 group-hover:scale-110" />
-                  <div className="absolute inset-0 overlay-cinematic" />
-                  <div className="absolute top-4 left-4">
-                    <span className={`px-3 py-1 rounded-full border font-body text-[10px] uppercase tracking-wider ${statusColors[trip.status]}`}>{trip.status.replace('-', ' ')}</span>
+        {loading ? (
+          <div className="text-center py-20">
+            <p className="font-body text-sm text-white/30">Loading trips...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtered.map((trip, i) => {
+              const dateStr = trip.start_date
+                ? new Date(trip.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                : '—';
+              const image = trip.cover_image || `https://picsum.photos/seed/${trip.trip_id}/800/600`;
+              return (
+                <motion.div key={trip.trip_id + trip.status} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} whileHover={{ y: -6 }}>
+                  <Link to={`/trip/view?id=${trip.trip_id}`} className="group block">
+                    <div className="relative h-56 rounded-t-2xl overflow-hidden">
+                      <img src={image} alt={trip.title} className="img-cover transition-transform duration-700 group-hover:scale-110" />
+                      <div className="absolute inset-0 overlay-cinematic" />
+                      <div className="absolute top-4 left-4">
+                        <span className={`px-3 py-1 rounded-full border font-body text-[10px] uppercase tracking-wider ${statusColors[trip.status]}`}>{trip.status.replace('-', ' ')}</span>
+                      </div>
+                      <div className="absolute top-4 right-4 w-8 h-8 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500">
+                        <ArrowUpRight className="w-4 h-4 text-luxury-white" />
+                      </div>
+                    </div>
+                    <div className="glass-elevated rounded-b-2xl p-5 rounded-t-none">
+                      <h3 className="font-display text-xl font-semibold text-luxury-white mb-2">{trip.title}</h3>
+                      <div className="flex items-center gap-4 mb-3">
+                        <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-white/40" /><span className="font-body text-xs text-white/50">{dateStr}</span></div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-luxury-gold" /><span className="font-body text-xs text-white/50">{trip.stop_count ? `${trip.stop_count} stops` : '—'}</span></div>
+                        <span className="font-body text-sm font-semibold text-luxury-gold">{trip.total_budget ? `$${trip.total_budget}` : '—'}</span>
+                      </div>
+                    </div>
+                  </Link>
+                  <div className="px-5 pb-4 glass-elevated rounded-b-2xl -mt-px pt-0">
+                    <Link to={`/trip/builder?id=${trip.trip_id}`} className="block w-full text-center py-2 rounded-xl font-body text-xs font-semibold text-luxury-gold border border-luxury-gold/20 hover:bg-luxury-gold/10 transition-all duration-300">Edit Trip</Link>
                   </div>
-                  <div className="absolute top-4 right-4 w-8 h-8 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500">
-                    <ArrowUpRight className="w-4 h-4 text-luxury-white" />
-                  </div>
-                </div>
-                <div className="glass-elevated rounded-b-2xl p-5 rounded-t-none">
-                  <h3 className="font-display text-xl font-semibold text-luxury-white mb-2">{trip.title}</h3>
-                  <div className="flex items-center gap-4 mb-3">
-                    <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-white/40" /><span className="font-body text-xs text-white/50">{trip.dates}</span></div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-luxury-gold" /><span className="font-body text-xs text-white/50">{trip.destinations.join(' → ')}</span></div>
-                    <span className="font-body text-sm font-semibold text-luxury-gold">{trip.price}</span>
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
+                </motion.div>
+              );
+            })}
+            {filtered.length === 0 && (
+              <div className="col-span-3 text-center py-20">
+                <p className="font-display text-2xl text-white/20 mb-2">No trips found</p>
+                <p className="font-body text-sm text-white/30">Start by creating a new trip</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </motion.div>
   );

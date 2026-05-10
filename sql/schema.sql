@@ -1,7 +1,7 @@
 CREATE DATABASE IF NOT EXISTS traveloop CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE traveloop;
 
-CREATE TABLE countries (
+CREATE TABLE IF NOT EXISTS countries (
   country_id   INT AUTO_INCREMENT PRIMARY KEY,
   country_name VARCHAR(100) NOT NULL,
   country_code CHAR(2) NOT NULL,
@@ -10,19 +10,19 @@ CREATE TABLE countries (
   UNIQUE KEY uq_country_code (country_code)
 );
 
-CREATE TABLE activity_categories (
+CREATE TABLE IF NOT EXISTS activity_categories (
   category_id INT AUTO_INCREMENT PRIMARY KEY,
   name        VARCHAR(100) NOT NULL,
   description TEXT,
   UNIQUE KEY uq_category_name (name)
 );
 
-CREATE TABLE packing_categories (
+CREATE TABLE IF NOT EXISTS packing_categories (
   category_id   INT AUTO_INCREMENT PRIMARY KEY,
   category_name VARCHAR(100) NOT NULL
 );
 
-CREATE TABLE cities (
+CREATE TABLE IF NOT EXISTS cities (
   city_id          INT AUTO_INCREMENT PRIMARY KEY,
   country_id       INT NOT NULL,
   city_name        VARCHAR(150) NOT NULL,
@@ -37,7 +37,7 @@ CREATE TABLE cities (
   FOREIGN KEY (country_id) REFERENCES countries(country_id)
 );
 
-CREATE TABLE activities (
+CREATE TABLE IF NOT EXISTS activities (
   activity_id                INT AUTO_INCREMENT PRIMARY KEY,
   city_id                    INT NOT NULL,
   category_id                INT NOT NULL,
@@ -55,20 +55,24 @@ CREATE TABLE activities (
   FOREIGN KEY (category_id) REFERENCES activity_categories(category_id)
 );
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   user_id       INT AUTO_INCREMENT PRIMARY KEY,
   name          VARCHAR(200) NOT NULL,
   email         VARCHAR(255) NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
   profile_photo VARCHAR(500),
   role          ENUM('user','admin') DEFAULT 'user',
+  phone         VARCHAR(30),
+  city_name     VARCHAR(150),
+  country_name  VARCHAR(100),
+  additional_info TEXT,
   created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   UNIQUE KEY uq_user_email (email),
   KEY idx_users_email (email)
 );
 
-CREATE TABLE trips (
+CREATE TABLE IF NOT EXISTS trips (
   trip_id     CHAR(36) PRIMARY KEY,
   user_id     INT NOT NULL,
   title       VARCHAR(200) NOT NULL,
@@ -83,7 +87,7 @@ CREATE TABLE trips (
   FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
-CREATE TABLE trip_stops (
+CREATE TABLE IF NOT EXISTS trip_stops (
   stop_id        INT AUTO_INCREMENT PRIMARY KEY,
   trip_id        CHAR(36) NOT NULL,
   city_id        INT NOT NULL,
@@ -98,7 +102,7 @@ CREATE TABLE trip_stops (
   FOREIGN KEY (city_id) REFERENCES cities(city_id)
 );
 
-CREATE TABLE stop_activities (
+CREATE TABLE IF NOT EXISTS stop_activities (
   id             INT AUTO_INCREMENT PRIMARY KEY,
   stop_id        INT NOT NULL,
   activity_id    INT NOT NULL,
@@ -113,7 +117,7 @@ CREATE TABLE stop_activities (
   FOREIGN KEY (activity_id) REFERENCES activities(activity_id)
 );
 
-CREATE TABLE trip_budgets (
+CREATE TABLE IF NOT EXISTS trip_budgets (
   budget_id      INT AUTO_INCREMENT PRIMARY KEY,
   trip_id        CHAR(36) NOT NULL,
   total_budget   DECIMAL(12,2) DEFAULT 0,
@@ -129,7 +133,7 @@ CREATE TABLE trip_budgets (
   FOREIGN KEY (trip_id) REFERENCES trips(trip_id) ON DELETE CASCADE
 );
 
-CREATE TABLE transport_segments (
+CREATE TABLE IF NOT EXISTS transport_segments (
   segment_id       INT AUTO_INCREMENT PRIMARY KEY,
   trip_id          CHAR(36) NOT NULL,
   from_stop_id     INT,
@@ -147,7 +151,7 @@ CREATE TABLE transport_segments (
   FOREIGN KEY (to_stop_id)   REFERENCES trip_stops(stop_id) ON DELETE SET NULL
 );
 
-CREATE TABLE packing_checklist_items (
+CREATE TABLE IF NOT EXISTS packing_checklist_items (
   item_id     INT AUTO_INCREMENT PRIMARY KEY,
   trip_id     CHAR(36) NOT NULL,
   user_id     INT NOT NULL,
@@ -161,7 +165,7 @@ CREATE TABLE packing_checklist_items (
   FOREIGN KEY (category_id) REFERENCES packing_categories(category_id)
 );
 
-CREATE TABLE trip_notes (
+CREATE TABLE IF NOT EXISTS trip_notes (
   note_id      INT AUTO_INCREMENT PRIMARY KEY,
   trip_id      CHAR(36) NOT NULL,
   stop_id      INT DEFAULT NULL,
@@ -176,7 +180,23 @@ CREATE TABLE trip_notes (
   FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
-CREATE TABLE shared_links (
+CREATE TABLE IF NOT EXISTS community_posts (
+  post_id     INT AUTO_INCREMENT PRIMARY KEY,
+  user_id     INT NOT NULL,
+  trip_id     CHAR(36) DEFAULT NULL,
+  title       VARCHAR(200) NOT NULL,
+  body        TEXT NOT NULL,
+  image_url   VARCHAR(500),
+  category    ENUM('experience','tip','photo','review') DEFAULT 'experience',
+  likes_count INT DEFAULT 0,
+  created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_posts_user (user_id),
+  KEY idx_posts_trip (trip_id),
+  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+  FOREIGN KEY (trip_id) REFERENCES trips(trip_id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS shared_links (
   link_id     INT AUTO_INCREMENT PRIMARY KEY,
   trip_id     CHAR(36) NOT NULL,
   share_token CHAR(64) NOT NULL,
@@ -188,13 +208,9 @@ CREATE TABLE shared_links (
   FOREIGN KEY (trip_id) REFERENCES trips(trip_id) ON DELETE CASCADE
 );
 
-CREATE TABLE Extra_info (
-  link_id     INT AUTO_INCREMENT PRIMARY KEY,
-  trip_id     CHAR(36) NOT NULL,
-  info_key    VARCHAR(100) NOT NULL,
-  info_value  TEXT,
-  created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
-  KEY idx_extra_trip (trip_id),
-  FOREIGN KEY (trip_id) REFERENCES trips(trip_id) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS sessions (
+  session_id VARCHAR(128) NOT NULL,
+  expires    INT(11) UNSIGNED NOT NULL,
+  data       MEDIUMTEXT,
+  PRIMARY KEY (session_id)
 );
-

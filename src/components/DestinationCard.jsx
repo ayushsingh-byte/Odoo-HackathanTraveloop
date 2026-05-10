@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Star, MapPin, ArrowUpRight } from 'lucide-react';
 
-export default function DestinationCard({ destination, size = 'default', index = 0 }) {
+export default function DestinationCard({ destination, size = 'default', index = 0, onClick }) {
   const { name, country, tagline, image, rating, trips, category } = destination;
 
   const sizeClasses = {
@@ -18,6 +18,8 @@ export default function DestinationCard({ destination, size = 'default', index =
       viewport={{ once: true, margin: '-50px' }}
       transition={{ duration: 0.7, delay: index * 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
       whileHover={{ y: -8, transition: { duration: 0.4 } }}
+      onClick={onClick}
+      style={{ cursor: onClick ? 'pointer' : 'default' }}
     >
       <Link
         to={`/explore`}

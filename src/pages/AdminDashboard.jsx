@@ -1,8 +1,10 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Globe, Users, DollarSign, TrendingUp, BarChart3, ArrowUpRight, ArrowDownRight, Search, Bell, Settings, LogOut, Home, Map, MessageSquare } from 'lucide-react';
 import GlassCard from '../components/GlassCard';
+import { API } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { adminStats } from '../data/mockData';
 
 const sidebarLinks = [
@@ -15,20 +17,39 @@ const sidebarLinks = [
 ];
 
 export default function AdminDashboard() {
-  const { totalUsers, activeTrips, revenue, engagement, recentUsers, monthlyData, topDestinations } = adminStats;
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [statsData, setStatsData] = useState(null);
+  const [usersData, setUsersData] = useState([]);
+
+  useEffect(() => {
+    if (user && user.role !== 'admin') {
+      navigate('/home');
+    }
+  }, [user, navigate]);
+
+  useEffect(() => {
+    API.get('/api/admin/stats').then(data => {
+      if (data) setStatsData(data);
+    });
+    API.get('/api/admin/users').then(data => {
+      if (data) setUsersData(data.users || []);
+    });
+  }, []);
+
+  const { monthlyData, topDestinations } = adminStats;
 
   const stats = [
-    { label: 'Total Users', value: totalUsers.toLocaleString(), icon: Users, change: '+12.5%', up: true },
-    { label: 'Active Trips', value: activeTrips.toLocaleString(), icon: Map, change: '+8.2%', up: true },
-    { label: 'Revenue', value: revenue, icon: DollarSign, change: '+23.1%', up: true },
-    { label: 'Engagement', value: engagement, icon: TrendingUp, change: '-2.4%', up: false },
+    { label: 'Total Users', value: statsData ? statsData.total_users?.toLocaleString() : '—', icon: Users, change: '+12.5%', up: true },
+    { label: 'Active Trips', value: statsData ? statsData.total_trips?.toLocaleString() : '—', icon: Map, change: '+8.2%', up: true },
+    { label: 'Total Stops', value: statsData ? statsData.total_stops?.toLocaleString() : '—', icon: DollarSign, change: '+23.1%', up: true },
+    { label: 'Activities', value: statsData ? statsData.total_activities?.toLocaleString() : '—', icon: TrendingUp, change: '-2.4%', up: false },
   ];
 
   const maxRevenue = Math.max(...monthlyData.map(d => d.revenue));
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex min-h-screen bg-luxury-black">
-      {/* Sidebar */}
       <aside className="w-64 border-r border-white/5 p-6 hidden lg:flex flex-col">
         <Link to="/" className="flex items-center gap-3 mb-10">
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-luxury-gold to-luxury-peach flex items-center justify-center">
@@ -49,9 +70,7 @@ export default function AdminDashboard() {
         </button>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 overflow-y-auto">
-        {/* Top Bar */}
         <div className="border-b border-white/5 px-8 py-5 flex items-center justify-between">
           <div>
             <h1 className="font-display text-2xl font-semibold text-luxury-white">Dashboard</h1>
@@ -70,7 +89,6 @@ export default function AdminDashboard() {
         </div>
 
         <div className="p-8">
-          {/* Stats Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {stats.map((s, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
@@ -89,7 +107,6 @@ export default function AdminDashboard() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            {/* Revenue Chart */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="lg:col-span-2">
               <GlassCard variant="elevated" padding="p-6">
                 <h3 className="font-display text-lg font-semibold text-luxury-white mb-6">Revenue Overview</h3>
@@ -109,7 +126,6 @@ export default function AdminDashboard() {
               </GlassCard>
             </motion.div>
 
-            {/* Top Destinations */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
               <GlassCard variant="elevated" padding="p-6">
                 <h3 className="font-display text-lg font-semibold text-luxury-white mb-6">Top Destinations</h3>
@@ -131,7 +147,6 @@ export default function AdminDashboard() {
             </motion.div>
           </div>
 
-          {/* Users Table */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
             <GlassCard variant="elevated" padding="p-6">
               <div className="flex items-center justify-between mb-6">
@@ -148,7 +163,18 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {recentUsers.map((u, i) => (
+                    {usersData.length > 0 ? usersData.map((u, i) => (
+                      <tr key={u.user_id || i} className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors">
+                        <td className="py-3.5 px-3 font-body text-sm text-luxury-white">{u.name || u.username}</td>
+                        <td className="py-3.5 px-3 font-body text-sm text-white/40">{u.email}</td>
+                        <td className="py-3.5 px-3 font-body text-sm text-luxury-gold">{u.trip_count ?? '—'}</td>
+                        <td className="py-3.5 px-3 font-body text-sm text-white/40">{u.created_at ? new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</td>
+                        <td className="py-3.5 px-3">
+                          <span className={`px-2.5 py-1 rounded-full font-body text-[10px] uppercase tracking-wider ${
+                            u.role === 'admin' ? 'bg-luxury-gold/10 text-luxury-gold' : 'bg-emerald-400/10 text-emerald-400'}`}>{u.role || 'user'}</span>
+                        </td>
+                      </tr>
+                    )) : adminStats.recentUsers.map((u, i) => (
                       <tr key={i} className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors">
                         <td className="py-3.5 px-3 font-body text-sm text-luxury-white">{u.name}</td>
                         <td className="py-3.5 px-3 font-body text-sm text-white/40">{u.email}</td>

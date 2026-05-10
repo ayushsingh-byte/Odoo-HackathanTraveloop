@@ -3,8 +3,16 @@ const express = require('express');
 const session = require('express-session');
 const MySQLStore = require('express-mysql-session')(session);
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
+
+app.use(require('helmet')());
+app.use(require('cors')({ origin: ['http://localhost:5173', 'http://localhost:3000'], credentials: true }));
+
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, message: { error: 'Too many requests' } });
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -45,6 +53,15 @@ app.use('/api/community',  require('./routes/community'));
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
+
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../dist')));
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(path.join(__dirname, '../dist/index.html'));
+    }
+  });
+}
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

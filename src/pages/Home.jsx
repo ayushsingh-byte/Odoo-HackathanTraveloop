@@ -1,10 +1,10 @@
-import { useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useRef, useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, Play, Sparkles, Star } from 'lucide-react';
 import SectionHeading from '../components/SectionHeading';
 import DestinationCard from '../components/DestinationCard';
-import { destinations, featuredTrips } from '../data/mockData';
+import { API } from '../services/api';
 
 const heroStats = [
   { icon: '🌏', label: '3 cities', sub: 'in Uttarakhand' },
@@ -14,15 +14,45 @@ const heroStats = [
   { icon: '✨', label: 'feel', sub: 'the peace' },
 ];
 
+const toDestination = (c) => ({
+  id: c.city_id,
+  name: c.city_name,
+  country: c.country_name,
+  image: c.image_url || '/images/hero-bali.png',
+  rating: ((c.popularity_score || 50) / 10).toFixed(1),
+  trips: Math.floor((c.popularity_score || 50) * 30),
+  category: 'Culture',
+  description: c.description || `Discover the beauty of ${c.city_name}.`,
+  tagline: `~$${c.avg_daily_cost}/day`,
+});
+
 export default function Home() {
+  const navigate = useNavigate();
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 600], [0, 150]);
   const heroOpacity = useTransform(scrollY, [0, 400], [1, 0.3]);
   const heroScale = useTransform(scrollY, [0, 600], [1, 1.1]);
 
+  const [destinations, setDestinations] = useState([]);
+  const [featuredTrips, setFeaturedTrips] = useState([]);
+
+  useEffect(() => {
+    API.get('/api/cities?limit=6').then(data => {
+      const list = Array.isArray(data) ? data : (data?.cities || []);
+      setDestinations(list.map(toDestination));
+    });
+    API.get('/api/trips').then(data => {
+      if (!data) return;
+      const all = [
+        ...(data.ongoing || []).map(t => ({ ...t, status: 'in-progress' })),
+        ...(data.upcoming || []).map(t => ({ ...t, status: 'upcoming' })),
+      ];
+      setFeaturedTrips(all.slice(0, 3));
+    });
+  }, []);
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-      {/* HERO */}
       <section className="relative h-screen min-h-[700px] overflow-hidden">
         <motion.div style={{ y: heroY, scale: heroScale }} className="absolute inset-0">
           <img src="/images/hero-dehradun.png" alt="Dehradun" className="img-cover" />
@@ -71,7 +101,6 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* DESTINATIONS */}
       <section className="py-24 lg:py-32 px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <SectionHeading label="Destinations" title="Discover Extraordinary Places" subtitle="Curated destinations for the modern luxury traveler" />
@@ -88,36 +117,44 @@ export default function Home() {
 
       <div className="section-line max-w-7xl mx-auto" />
 
-      {/* FEATURED TRIPS */}
       <section className="py-24 lg:py-32 px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <SectionHeading label="Featured" title="Curated Journeys" subtitle="Handpicked itineraries crafted by our community of luxury travelers" />
           <div className="mt-16 flex gap-6 overflow-x-auto no-scrollbar pb-4">
-            {featuredTrips.map((trip, i) => (
-              <motion.div key={trip.id} initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} whileHover={{ y: -6 }} className="flex-shrink-0 w-80">
-                <Link to="/shared/1" className="group block">
-                  <div className="relative h-52 rounded-t-2xl overflow-hidden">
-                    <img src={trip.image} alt={trip.title} className="img-cover transition-transform duration-700 group-hover:scale-110" />
-                    <div className="absolute inset-0 overlay-cinematic" />
-                    <div className="absolute top-3 right-3 glass px-2.5 py-1 rounded-full"><span className="font-body text-[10px] font-medium text-luxury-white">{trip.duration}</span></div>
-                    <div className="absolute bottom-3 left-3 flex items-center gap-1"><Star className="w-3 h-3 text-luxury-gold fill-luxury-gold" /><span className="font-body text-xs text-luxury-white">{trip.rating}</span></div>
-                  </div>
-                  <div className="glass-elevated rounded-b-2xl p-5 rounded-t-none">
-                    <h3 className="font-display text-lg font-semibold text-luxury-white mb-1.5">{trip.title}</h3>
-                    <p className="font-body text-xs text-white/40 mb-3 line-clamp-2">{trip.description}</p>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2"><span className="text-base">{trip.travelerAvatar}</span><span className="font-body text-xs text-white/50">{trip.traveler}</span></div>
-                      <span className="font-body text-sm font-semibold text-luxury-gold">{trip.price}</span>
+            {featuredTrips.length > 0 ? featuredTrips.map((trip, i) => {
+              const image = trip.cover_image || `https://picsum.photos/seed/${trip.trip_id}/800/600`;
+              const dateStr = trip.start_date
+                ? new Date(trip.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                : '';
+              return (
+                <motion.div key={trip.trip_id} initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} whileHover={{ y: -6 }} className="flex-shrink-0 w-80">
+                  <Link to={`/trip/view?id=${trip.trip_id}`} className="group block">
+                    <div className="relative h-52 rounded-t-2xl overflow-hidden">
+                      <img src={image} alt={trip.title} className="img-cover transition-transform duration-700 group-hover:scale-110" />
+                      <div className="absolute inset-0 overlay-cinematic" />
+                      <div className="absolute top-3 right-3 glass px-2.5 py-1 rounded-full"><span className="font-body text-[10px] font-medium text-luxury-white">{dateStr}</span></div>
+                      <div className="absolute bottom-3 left-3 flex items-center gap-1"><Star className="w-3 h-3 text-luxury-gold fill-luxury-gold" /><span className="font-body text-xs text-luxury-white">{trip.status.replace('-', ' ')}</span></div>
                     </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
+                    <div className="glass-elevated rounded-b-2xl p-5 rounded-t-none">
+                      <h3 className="font-display text-lg font-semibold text-luxury-white mb-1.5">{trip.title}</h3>
+                      <p className="font-body text-xs text-white/40 mb-3 line-clamp-2">{trip.description || `A wonderful journey`}</p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2"><span className="text-base">✈️</span><span className="font-body text-xs text-white/50">{trip.stop_count ? `${trip.stop_count} stops` : 'Trip'}</span></div>
+                        <span className="font-body text-sm font-semibold text-luxury-gold">{trip.total_budget ? `$${trip.total_budget}` : '—'}</span>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              );
+            }) : (
+              <div className="w-full py-8 text-center">
+                <p className="font-body text-sm text-white/30">No featured trips yet. <Link to="/create-trip" className="text-luxury-gold hover:underline">Create your first trip!</Link></p>
+              </div>
+            )}
           </div>
         </div>
       </section>
 
-      {/* CTA SECTION */}
       <section className="relative py-32 lg:py-40 overflow-hidden">
         <div className="absolute inset-0"><img src="/images/hero-bali.png" alt="Bali" className="img-cover" /><div className="absolute inset-0 bg-black/60" /></div>
         <div className="relative max-w-4xl mx-auto text-center px-6">
@@ -133,7 +170,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* STATS BAR */}
       <section className="py-20 px-6 lg:px-8 border-y border-white/5">
         <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
           {[{ v: '50K+', l: 'Travelers' }, { v: '120+', l: 'Destinations' }, { v: '4.9', l: 'Rating' }, { v: '10K+', l: 'Itineraries' }].map((s, i) => (
