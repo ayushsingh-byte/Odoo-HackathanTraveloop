@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traveloop — Invoice</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .invoice-wrap { display: grid; grid-template-columns: 1fr 320px; gap: 2rem; }
+    @media (max-width: 900px) { .invoice-wrap { grid-template-columns: 1fr; } }
+    .invoice-box { background: #fff; border: 1.5px solid #e5e7eb; border-radius: 16px; padding: 2rem; }
+    .invoice-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 2px solid #e5e7eb; }
+    .invoice-brand { font-size: 1.5rem; font-weight: 800; color: #6c63ff; }
+    .invoice-id { font-size: 0.85rem; color: #6b7280; margin-top: 0.25rem; }
+    .invoice-to h4 { font-size: 0.8rem; text-transform: uppercase; color: #6b7280; letter-spacing: 0.5px; margin-bottom: 0.3rem; }
+    .invoice-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; }
+    .invoice-table th { background: #f8f9ff; padding: 0.65rem 0.75rem; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
+    .invoice-table td { padding: 0.65rem 0.75rem; border-bottom: 1px solid #f1f0ff; }
+    .invoice-table tr:last-child td { border-bottom: none; }
+    .invoice-table .text-right { text-align: right; }
+    .totals-row { display: flex; justify-content: space-between; padding: 0.5rem 0; font-size: 0.9rem; }
+    .totals-row.grand { font-weight: 700; font-size: 1.05rem; border-top: 2px solid #6c63ff; padding-top: 0.75rem; margin-top: 0.25rem; color: #6c63ff; }
+    .status-badge { display: inline-block; padding: 0.3rem 0.9rem; border-radius: 20px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-paid { background: #d1fae5; color: #065f46; }
+    .status-over_budget { background: #fee2e2; color: #991b1b; }
+    .insight-item { display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f1f0ff; font-size: 0.9rem; }
+    .insight-item:last-child { border-bottom: none; }
+    .budget-bar-wrap { height: 10px; background: #e5e7eb; border-radius: 5px; overflow: hidden; margin-top: 1rem; }
+    .budget-bar-fill { height: 100%; border-radius: 5px; }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #fff; }
+      .navbar { display: none; }
+      .page-header { display: none; }
+    }
+  </style>
+  <script src="js/api.js"></script>
+  <script src="js/layout.js"></script>
+</head>
+<body data-page="invoice">
+
+<div id="__main" class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Trip Invoice</span>
+    <div class="topbar-actions"></div>
+  </div>
+  <div class="page-wrap">
+    <div id="__trip-subnav"></div>
+    <div id="alert" class="alert" style="display:none;"></div>
+<nav class="navbar no-print">
+  <div class="container navbar-inner">
+    <a href="dashboard.html" class="navbar-brand">✈ Traveloop</a>
+    <ul class="navbar-nav">
+      <li><a href="dashboard.html">Home</a></li>
+      <li><a href="trips.html">My Trips</a></li>
+      <li><a href="cities.html">Explore</a></li>
+      <li><a href="community.html">Community</a></li>
+      <li><a href="profile.html" id="nav-user">Profile</a></li>
+      <li><button class="btn btn-secondary btn-sm" onclick="_layoutLogout()">Logout</button></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header flex items-center justify-between no-print">
+    <div>
+      <h1>Trip Invoice</h1>
+      <p id="trip-subtitle"></p>
+    </div>
+    <div class="flex gap-1">
+      <a id="back-link" href="#" class="btn btn-secondary">← Back to Trip</a>
+      <button class="btn btn-secondary" onclick="window.print()">Print / PDF</button>
+      <button class="btn btn-primary" id="mark-paid-btn" onclick="markPaid()">Mark as Paid</button>
+    </div>
+  </div>
+
+  
+  <div id="spinner"><div class="spinner"></div></div>
+
+  <div id="invoice-content" style="display:none">
+    <div class="invoice-wrap">
+      <div class="invoice-box" id="printable">
+        <div class="invoice-header">
+          <div>
+            <div class="invoice-brand">✈ Traveloop</div>
+            <div class="invoice-id" id="inv-id"></div>
+            <div style="margin-top:0.5rem">
+              <span class="status-badge" id="inv-status"></span>
+            </div>
+          </div>
+          <div class="invoice-to" style="text-align:right">
+            <h4>Billed To</h4>
+            <strong id="inv-owner"></strong>
+            <div class="text-muted" style="font-size:0.85rem" id="inv-dates"></div>
+          </div>
+        </div>
+
+        <div>
+          <h3 style="margin-bottom:0.25rem" id="inv-trip-title"></h3>
+          <p class="text-muted" style="font-size:0.85rem">Detailed expense breakdown</p>
+        </div>
+
+        <table class="invoice-table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th class="text-right">Qty</th>
+              <th class="text-right">Unit Cost</th>
+              <th class="text-right">Amount</th>
+            </tr>
+          </thead>
+          <tbody id="inv-items"></tbody>
+        </table>
+
+        <div style="max-width:320px;margin-left:auto">
+          <div class="totals-row">
+            <span class="text-muted">Subtotal</span>
+            <span id="inv-subtotal"></span>
+          </div>
+          <div class="totals-row">
+            <span class="text-muted">Tax (5%)</span>
+            <span id="inv-tax"></span>
+          </div>
+          <div class="totals-row">
+            <span class="text-muted">Discount</span>
+            <span id="inv-discount">$0.00</span>
+          </div>
+          <div class="totals-row grand">
+            <span>Grand Total</span>
+            <span id="inv-grand"></span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card mb-2">
+          <div class="card-body">
+            <h3 class="mb-2">Budget Insights</h3>
+            <div class="insight-item">
+              <span class="text-muted">Total Budget</span>
+              <strong id="ins-budget"></strong>
+            </div>
+            <div class="insight-item">
+              <span class="text-muted">Total Spent</span>
+              <strong id="ins-spent"></strong>
+            </div>
+            <div class="insight-item">
+              <span class="text-muted">Remaining</span>
+              <strong id="ins-remaining" class="text-success"></strong>
+            </div>
+            <div class="budget-bar-wrap mt-2">
+              <div class="budget-bar-fill" id="ins-bar" style="background:#6c63ff"></div>
+            </div>
+            <p class="text-muted mt-1" style="font-size:0.8rem" id="ins-pct"></p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <h3 class="mb-2">Export Options</h3>
+            <div class="flex flex-col gap-1">
+              <button class="btn btn-primary" onclick="window.print()">Export as PDF</button>
+              <button class="btn btn-secondary" onclick="downloadCSV()">Download CSV</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  const tripId = getParam('id');
+  let invoiceData = null;
+  let isPaid = false;
+
+  (async () => {
+    const user = await checkAuth();
+    if (!user) return;
+    setNavUser(user);
+    if (!tripId) return window.location.href = 'trips.html';
+    document.getElementById('back-link').href = `trip-view.html?id=${tripId}`;
+    await loadInvoice();
+  })();
+
+  async function loadInvoice() {
+    const data = await API.get(`/api/trips/${tripId}/invoice`);
+    if (data.error) {
+      document.getElementById('spinner').style.display = 'none';
+      return showAlert(data.error);
+    }
+    invoiceData = data.invoice;
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('invoice-content').style.display = 'block';
+    document.getElementById('trip-subtitle').textContent = invoiceData.trip_title;
+    renderInvoice(invoiceData);
+  }
+
+  function renderInvoice(inv) {
+    document.getElementById('inv-id').textContent         = inv.invoice_id;
+    document.getElementById('inv-trip-title').textContent = inv.trip_title;
+    document.getElementById('inv-owner').textContent      = inv.owner_name;
+    document.getElementById('inv-dates').textContent      = `${fmt(inv.start_date)} — ${fmt(inv.end_date)}`;
+
+    const statusEl = document.getElementById('inv-status');
+    statusEl.textContent  = isPaid ? 'PAID' : inv.payment_status === 'over_budget' ? 'OVER BUDGET' : 'PENDING';
+    statusEl.className    = `status-badge status-${isPaid ? 'paid' : inv.payment_status}`;
+
+    document.getElementById('inv-items').innerHTML = (inv.line_items || []).map(item => `
+      <tr>
+        <td>${item.description}</td>
+        <td class="text-right">${item.qty} ${item.unit}</td>
+        <td class="text-right">${fmtMoney(item.unit_cost, inv.currency)}</td>
+        <td class="text-right"><strong>${fmtMoney(item.amount, inv.currency)}</strong></td>
+      </tr>`).join('');
+
+    document.getElementById('inv-subtotal').textContent = fmtMoney(inv.subtotal, inv.currency);
+    document.getElementById('inv-tax').textContent      = fmtMoney(inv.tax, inv.currency);
+    document.getElementById('inv-grand').textContent    = fmtMoney(inv.grand_total, inv.currency);
+
+    document.getElementById('ins-budget').textContent    = fmtMoney(inv.total_budget, inv.currency);
+    document.getElementById('ins-spent').textContent     = fmtMoney(inv.total_spent, inv.currency);
+
+    const remEl = document.getElementById('ins-remaining');
+    remEl.textContent = fmtMoney(inv.remaining, inv.currency);
+    remEl.className   = `${inv.remaining < 0 ? 'text-danger' : 'text-success'}`;
+
+    const pct = inv.total_budget > 0 ? Math.min(100, Math.round((inv.total_spent / inv.total_budget) * 100)) : 0;
+    document.getElementById('ins-bar').style.width      = `${pct}%`;
+    document.getElementById('ins-bar').style.background = inv.remaining < 0 ? '#ef4444' : '#6c63ff';
+    document.getElementById('ins-pct').textContent      = `${pct}% of budget used`;
+  }
+
+  function markPaid() {
+    isPaid = !isPaid;
+    const btn = document.getElementById('mark-paid-btn');
+    btn.textContent = isPaid ? 'Mark as Pending' : 'Mark as Paid';
+    btn.className   = isPaid ? 'btn btn-secondary' : 'btn btn-primary';
+    if (invoiceData) renderInvoice(invoiceData);
+    showAlert(isPaid ? 'Marked as paid' : 'Marked as pending', 'success');
+  }
+
+  function downloadCSV() {
+    if (!invoiceData) return;
+    const rows = [
+      ['Description', 'Qty', 'Unit', 'Unit Cost', 'Amount'],
+      ...(invoiceData.line_items || []).map(i => [i.description, i.qty, i.unit, i.unit_cost, i.amount]),
+      [],
+      ['Subtotal', '', '', '', invoiceData.subtotal],
+      ['Tax (5%)', '', '', '', invoiceData.tax],
+      ['Grand Total', '', '', '', invoiceData.grand_total]
+    ];
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${invoiceData.invoice_id}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+</script>
+  </div>
+</div>
+</body>

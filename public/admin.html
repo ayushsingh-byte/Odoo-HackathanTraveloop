@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traveloop — Admin</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <style>
+    .admin-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .admin-table th { background: #f8f9ff; padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
+    .admin-table td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f0ff; vertical-align: middle; }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-table tr:hover td { background: #f8f9ff; }
+    .rank-bar { height: 8px; background: #ede9ff; border-radius: 4px; overflow: hidden; min-width: 80px; }
+    .rank-bar-fill { height: 100%; background: linear-gradient(90deg, #6c63ff, #a78bfa); border-radius: 4px; }
+  </style>
+  <script src="js/api.js"></script>
+  <script src="js/layout.js"></script>
+</head>
+<body data-page="admin">
+
+<div id="__main" class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Admin Panel</span>
+    <div class="topbar-actions"></div>
+  </div>
+  <div class="page-wrap">
+    <div id="alert" class="alert" style="display:none;"></div>
+<div class="container">
+  <div class="page-header">
+    <h1>Admin Panel</h1>
+    <p>Platform overview and management</p>
+  </div>
+
+  
+
+  <div class="grid grid-4 mb-3">
+    <div class="stat-card">
+      <div class="stat-value" id="stat-users">—</div>
+      <div class="stat-label">Total Users</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-trips">—</div>
+      <div class="stat-label">Total Trips</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-stops">—</div>
+      <div class="stat-label">City Stops</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-activities">—</div>
+      <div class="stat-label">Activities Planned</div>
+    </div>
+  </div>
+
+  <div class="tab-bar mb-0">
+    <button class="active" onclick="showTab('users')">Manage Users</button>
+    <button onclick="showTab('cities')">Popular Cities</button>
+    <button onclick="showTab('activities')">Popular Activities</button>
+    <button onclick="showTab('trends')">User Trends</button>
+  </div>
+
+  <div id="tab-users">
+    <div class="card mt-2">
+      <div class="card-body">
+        <div class="flex items-center justify-between mb-2">
+          <h3>Registered Users</h3>
+          <input type="text" id="user-search" class="form-control" style="max-width:240px" placeholder="Search users..." oninput="filterUsers()">
+        </div>
+        <div style="overflow-x:auto">
+          <table class="admin-table" id="users-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Trips</th>
+                <th>Joined</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody"><tr><td colspan="6"><div class="spinner"></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-cities" style="display:none">
+    <div class="card mt-2">
+      <div class="card-body">
+        <h3 class="mb-2">Most Visited Cities</h3>
+        <table class="admin-table" id="cities-table">
+          <thead>
+            <tr><th>#</th><th>City</th><th>Country</th><th>Visits</th><th>Popularity</th></tr>
+          </thead>
+          <tbody id="cities-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-activities" style="display:none">
+    <div class="card mt-2">
+      <div class="card-body">
+        <h3 class="mb-2">Most Booked Activities</h3>
+        <table class="admin-table" id="activities-table">
+          <thead>
+            <tr><th>#</th><th>Activity</th><th>Times Booked</th><th>Popularity</th></tr>
+          </thead>
+          <tbody id="activities-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-trends" style="display:none">
+    <div class="card mt-2">
+      <div class="card-body">
+        <h3 class="mb-2">Trip Creation Trend (Last 30 Days)</h3>
+        <canvas id="trend-chart" height="120"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  let statsData = null;
+  let allUsers = [];
+  let trendChart = null;
+  let currentTab = 'users';
+
+  (async () => {
+    const user = await checkAuth();
+    if (!user) return;
+    if (user.role !== 'admin') {
+      showAlert('Admin access required');
+      setTimeout(() => window.location.href = 'dashboard.html', 2000);
+      return;
+    }
+    setNavUser(user);
+    await loadData();
+  })();
+
+  async function loadData() {
+    const [stats, users] = await Promise.all([
+      API.get('/api/admin/stats'),
+      API.get('/api/admin/users')
+    ]);
+
+    statsData = stats;
+    allUsers = users.users || [];
+
+    document.getElementById('stat-users').textContent      = stats.total_users;
+    document.getElementById('stat-trips').textContent      = stats.total_trips;
+    document.getElementById('stat-stops').textContent      = stats.total_stops;
+    document.getElementById('stat-activities').textContent = stats.total_activities;
+
+    renderUsers(allUsers);
+    renderCities(stats.top_cities || []);
+    renderActivities(stats.top_activities || []);
+    renderTrend(stats.trips_per_day || []);
+  }
+
+  function renderUsers(users) {
+    document.getElementById('users-tbody').innerHTML = users.length === 0
+      ? '<tr><td colspan="6" class="text-muted text-center">No users found</td></tr>'
+      : users.map(u => `<tr>
+          <td><strong>${u.name}</strong></td>
+          <td class="text-muted">${u.email}</td>
+          <td><span class="badge ${u.role === 'admin' ? 'badge-danger' : 'badge-primary'}">${u.role}</span></td>
+          <td>${u.trip_count}</td>
+          <td class="text-muted" style="font-size:0.82rem">${fmt(u.created_at)}</td>
+          <td>
+            ${u.role !== 'admin' ? `<button class="btn btn-danger btn-sm" onclick="deleteUser(${u.user_id})">Remove</button>` : '<span class="text-muted">—</span>'}
+          </td>
+        </tr>`).join('');
+  }
+
+  function renderCities(cities) {
+    const max = cities[0]?.visit_count || 1;
+    document.getElementById('cities-tbody').innerHTML = cities.map((c, i) => `
+      <tr>
+        <td><strong>#${i + 1}</strong></td>
+        <td>${c.city_name}</td>
+        <td class="text-muted">${c.country_name}</td>
+        <td>${c.visit_count}</td>
+        <td><div class="rank-bar"><div class="rank-bar-fill" style="width:${(c.visit_count/max)*100}%"></div></div></td>
+      </tr>`).join('') || '<tr><td colspan="5" class="text-muted">No data yet</td></tr>';
+  }
+
+  function renderActivities(acts) {
+    const max = acts[0]?.use_count || 1;
+    document.getElementById('activities-tbody').innerHTML = acts.map((a, i) => `
+      <tr>
+        <td><strong>#${i + 1}</strong></td>
+        <td>${a.activity_name}</td>
+        <td>${a.use_count}</td>
+        <td><div class="rank-bar"><div class="rank-bar-fill" style="width:${(a.use_count/max)*100}%"></div></div></td>
+      </tr>`).join('') || '<tr><td colspan="4" class="text-muted">No data yet</td></tr>';
+  }
+
+  function renderTrend(data) {
+    if (trendChart) trendChart.destroy();
+    trendChart = new Chart(document.getElementById('trend-chart'), {
+      type: 'line',
+      data: {
+        labels: data.map(d => d.date),
+        datasets: [{
+          label: 'Trips Created',
+          data: data.map(d => d.count),
+          borderColor: '#6c63ff',
+          backgroundColor: 'rgba(108,99,255,0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+      }
+    });
+  }
+
+  function filterUsers() {
+    const q = document.getElementById('user-search').value.toLowerCase();
+    const filtered = allUsers.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+    renderUsers(filtered);
+  }
+
+  async function deleteUser(userId) {
+    if (!confirm('Permanently remove this user and all their data?')) return;
+    showAlert('User deletion requires direct DB access in this demo.', 'warning');
+  }
+
+  function showTab(tab) {
+    currentTab = tab;
+    ['users', 'cities', 'activities', 'trends'].forEach(t => {
+      document.getElementById(`tab-${t}`).style.display = t === tab ? 'block' : 'none';
+    });
+    document.querySelectorAll('.tab-bar button').forEach((b, i) => {
+      b.classList.toggle('active', ['users','cities','activities','trends'][i] === tab);
+    });
+  }
+</script>
+  </div>
+</div>
+</body>

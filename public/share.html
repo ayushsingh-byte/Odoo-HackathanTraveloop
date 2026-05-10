@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traveloop — Shared Itinerary</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container navbar-inner">
+    <a href="/dashboard.html" class="navbar-brand">✈ Traveloop</a>
+    <ul class="navbar-nav">
+      <li><a href="/index.html" class="btn btn-primary btn-sm">Login to Plan Your Trip</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container" style="max-width:800px">
+  <div id="loading" class="text-center" style="padding:4rem"><div class="spinner"></div></div>
+  <div id="content" style="display:none">
+    <div style="background:linear-gradient(135deg,#6c63ff,#a78bfa);padding:2.5rem;border-radius:16px;color:#fff;margin-bottom:2rem;margin-top:1.5rem">
+      <p style="opacity:0.8;font-size:0.85rem;margin-bottom:0.25rem">Shared itinerary by <span id="owner-name"></span></p>
+      <h1 id="trip-title" style="font-size:2rem;margin-bottom:0.5rem"></h1>
+      <p id="trip-dates" style="opacity:0.9"></p>
+    </div>
+
+    <div id="stops-content" class="timeline"></div>
+  </div>
+  <div id="error-state" class="empty-state" style="display:none">
+    <h3>Link not found or expired</h3>
+    <p>This shared link may have been revoked or has expired.</p>
+    <a href="/index.html" class="btn btn-primary mt-2">Go to Traveloop</a>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+  (async () => {
+    const token = getParam('token');
+    if (!token) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error-state').style.display = 'block';
+      return;
+    }
+
+    const data = await API.get(`/api/share/${token}`);
+    document.getElementById('loading').style.display = 'none';
+
+    if (data.error) {
+      document.getElementById('error-state').style.display = 'block';
+      return;
+    }
+
+    const { trip, stops } = data;
+    document.title = `${trip.title} — Traveloop`;
+    document.getElementById('trip-title').textContent   = trip.title;
+    document.getElementById('owner-name').textContent   = trip.owner_name;
+    document.getElementById('trip-dates').textContent   = `${fmt(trip.start_date)} — ${fmt(trip.end_date)}`;
+
+    document.getElementById('stops-content').innerHTML = (stops || []).map((s, i) => `
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="card mb-2">
+          <div class="card-body">
+            <div class="flex items-center justify-between mb-1">
+              <h3>Stop ${i + 1}: ${s.city_name} <span class="text-muted" style="font-weight:400;font-size:0.9rem">${s.country_name}</span></h3>
+            </div>
+            <p class="text-muted">${fmt(s.arrival_date)} — ${fmt(s.departure_date)}</p>
+            ${(s.activities || []).length > 0 ? `
+            <div style="margin-top:1rem">
+              <p class="text-muted" style="font-size:0.8rem;margin-bottom:0.5rem">ACTIVITIES</p>
+              ${s.activities.map(a => `
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:0.5rem 0.75rem;background:#f8f9ff;border-radius:8px;margin-bottom:0.4rem">
+                  <span><span class="activity-chip">${a.category_name}</span> <strong style="margin-left:0.4rem;font-size:0.9rem">${a.activity_name}</strong></span>
+                  <span class="text-muted">${fmtMoney(a.estimated_cost)}</span>
+                </div>`).join('')}
+            </div>` : ''}
+          </div>
+        </div>
+      </div>`).join('');
+
+    document.getElementById('content').style.display = 'block';
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traveloop — Itinerary Builder</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+  <style>
+    .stops-list { display: flex; flex-direction: column; gap: 1rem; }
+    .stop-card { border: 1.5px solid #e5e7eb; border-radius: 12px; background: #fff; }
+    .stop-header { display: flex; align-items: center; gap: 0.75rem; padding: 1rem 1.25rem; cursor: pointer; }
+    .stop-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid #f1f0ff; }
+    .activity-row { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f1f0ff; }
+    .city-results { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1.5px solid #e5e7eb; border-radius: 8px; z-index: 50; max-height: 240px; overflow-y: auto; box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+    .city-result-item { padding: 0.65rem 1rem; cursor: pointer; font-size: 0.9rem; transition: background 0.15s; }
+    .city-result-item:hover { background: #f1f0ff; }
+    .city-search-wrap { position: relative; }
+    .stop-num { width: 28px; height: 28px; border-radius: 50%; background: #6c63ff; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; flex-shrink: 0; }
+  </style>
+  <script src="js/api.js"></script>
+  <script src="js/layout.js"></script>
+</head>
+<body data-page="builder">
+
+<div id="__main" class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Itinerary Builder</span>
+    <div class="topbar-actions"></div>
+  </div>
+  <div class="page-wrap">
+    <div id="__trip-subnav"></div>
+    <div id="alert" class="alert" style="display:none;"></div>
+<div class="container">
+  <div class="page-header flex items-center justify-between">
+    <div>
+      <h1 id="trip-title">Itinerary Builder</h1>
+      <p>Add stops, cities, and activities to your trip</p>
+    </div>
+    <div class="flex gap-1">
+      <a id="view-link" href="#" class="btn btn-secondary">View Itinerary</a>
+      <button class="btn btn-primary" onclick="openAddStop()">+ Add Stop</button>
+    </div>
+  </div>
+
+  
+  <div id="stops-list" class="stops-list"><div class="spinner"></div></div>
+</div>
+
+<div id="stop-modal" class="modal-overlay" style="display:none;">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">Add Stop</h3>
+      <button class="modal-close" onclick="closeStopModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">City</label>
+        <div class="city-search-wrap">
+          <input type="text" id="city-search" class="form-control" placeholder="Search city..." oninput="searchCities(this.value)" autocomplete="off">
+          <div id="city-results" class="city-results" style="display:none;"></div>
+        </div>
+        <input type="hidden" id="selected-city-id">
+        <div id="selected-city-name" class="text-muted mt-1" style="font-size:0.85rem;"></div>
+      </div>
+      <div class="grid grid-2">
+        <div class="form-group">
+          <label class="form-label">Arrival Date</label>
+          <input type="date" id="stop-arrival" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Departure Date</label>
+          <input type="date" id="stop-departure" class="form-control">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea id="stop-notes" class="form-control" rows="2" placeholder="Hotel name, reminders..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeStopModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStop()">Save Stop</button>
+    </div>
+  </div>
+</div>
+
+<div id="activity-modal" class="modal-overlay" style="display:none;">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Add Activity</h3>
+      <button class="modal-close" onclick="closeActivityModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Search Activities</label>
+        <input type="text" id="act-search" class="form-control" placeholder="Search..." oninput="searchActivities(this.value)">
+      </div>
+      <div id="act-results" style="max-height:300px;overflow-y:auto;"></div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  const tripId = getParam('id');
+  let stops = [];
+  let activeStopId = null;
+
+  (async () => {
+    const user = await checkAuth();
+    if (!user) return;
+    setNavUser(user);
+    if (!tripId) return window.location.href = 'trips.html';
+    document.getElementById('view-link').href = `/trip-view.html?id=${tripId}`;
+    await loadTrip();
+  })();
+
+  async function loadTrip() {
+    const data = await API.get(`/api/trips/${tripId}`);
+    if (data.error) return showAlert(data.error);
+    stops = data.stops || [];
+    document.getElementById('trip-title').textContent = data.trip.title;
+    renderStops();
+  }
+
+  function renderStops() {
+    const el = document.getElementById('stops-list');
+    if (stops.length === 0) {
+      el.innerHTML = `<div class="empty-state"><h3>No stops yet</h3><p>Add your first city stop to begin building your itinerary.</p></div>`;
+      return;
+    }
+    el.innerHTML = stops.map((s, i) => stopCard(s, i)).join('');
+    new Sortable(el, {
+      animation: 150,
+      handle: '.drag-handle',
+      onEnd: async (evt) => {
+        const order = [...el.querySelectorAll('[data-stop-id]')].map(el => parseInt(el.dataset.stopId));
+        await API.put(`/api/trips/${tripId}/stops/reorder`, { order });
+        await loadTrip();
+      }
+    });
+  }
+
+  function stopCard(s, i) {
+    const acts = s.activities || [];
+    return `<div class="stop-card" data-stop-id="${s.stop_id}">
+      <div class="stop-header">
+        <span class="drag-handle" title="Drag to reorder">⠿</span>
+        <span class="stop-num">${i + 1}</span>
+        <div style="flex:1">
+          <strong>${s.city_name}</strong>
+          <span class="text-muted" style="margin-left:0.5rem;font-size:0.85rem">${s.country_name}</span>
+        </div>
+        <span class="text-muted" style="font-size:0.82rem">${fmt(s.arrival_date)} → ${fmt(s.departure_date)}</span>
+        <button class="btn btn-secondary btn-sm" onclick="openAddActivity(${s.stop_id}, ${s.city_id})">+ Activity</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteStop(${s.stop_id})">✕</button>
+      </div>
+      ${acts.length > 0 ? `<div class="stop-body">
+        ${acts.map(a => `<div class="activity-row">
+          <div>
+            <span class="activity-chip">${a.category_name}</span>
+            <strong style="margin-left:0.5rem;font-size:0.9rem">${a.activity_name}</strong>
+            ${a.scheduled_date ? `<span class="text-muted" style="margin-left:0.5rem;font-size:0.8rem">${fmt(a.scheduled_date)}</span>` : ''}
+          </div>
+          <div class="flex items-center gap-1">
+            <span class="text-muted" style="font-size:0.85rem">${fmtMoney(a.actual_cost || a.estimated_cost)}</span>
+            <button class="btn btn-danger btn-sm" onclick="removeActivity(${s.stop_id}, ${a.id})">✕</button>
+          </div>
+        </div>`).join('')}
+      </div>` : ''}
+    </div>`;
+  }
+
+  function openAddStop() {
+    document.getElementById('city-search').value = '';
+    document.getElementById('selected-city-id').value = '';
+    document.getElementById('selected-city-name').textContent = '';
+    document.getElementById('stop-arrival').value = '';
+    document.getElementById('stop-departure').value = '';
+    document.getElementById('stop-notes').value = '';
+    document.getElementById('city-results').style.display = 'none';
+    document.getElementById('stop-modal').style.display = 'flex';
+  }
+
+  function closeStopModal() {
+    document.getElementById('stop-modal').style.display = 'none';
+  }
+
+  let citySearchTimer;
+  async function searchCities(q) {
+    clearTimeout(citySearchTimer);
+    if (q.length < 2) { document.getElementById('city-results').style.display = 'none'; return; }
+    citySearchTimer = setTimeout(async () => {
+      const data = await API.get(`/api/cities?q=${encodeURIComponent(q)}&limit=8`);
+      const resultsEl = document.getElementById('city-results');
+      if (!data.cities || data.cities.length === 0) { resultsEl.style.display = 'none'; return; }
+      resultsEl.innerHTML = data.cities.map(c =>
+        `<div class="city-result-item" onclick="selectCity(${c.city_id}, '${c.city_name}', '${c.country_name}')">
+          <strong>${c.city_name}</strong> <span style="color:#6b7280;font-size:0.82rem">${c.country_name}</span>
+        </div>`
+      ).join('');
+      resultsEl.style.display = 'block';
+    }, 300);
+  }
+
+  function selectCity(id, name, country) {
+    document.getElementById('selected-city-id').value = id;
+    document.getElementById('city-search').value = name;
+    document.getElementById('selected-city-name').textContent = `${name}, ${country}`;
+    document.getElementById('city-results').style.display = 'none';
+  }
+
+  async function saveStop() {
+    const cityId = document.getElementById('selected-city-id').value;
+    if (!cityId) return showAlert('Please select a city');
+    const data = await API.post(`/api/trips/${tripId}/stops`, {
+      city_id: parseInt(cityId),
+      arrival_date: document.getElementById('stop-arrival').value || null,
+      departure_date: document.getElementById('stop-departure').value || null,
+      notes: document.getElementById('stop-notes').value || null,
+      position: stops.length
+    });
+    if (data.error) return showAlert(data.error);
+    closeStopModal();
+    await loadTrip();
+  }
+
+  async function deleteStop(stopId) {
+    if (!confirm('Remove this stop and all its activities?')) return;
+    await API.del(`/api/trips/${tripId}/stops/${stopId}`);
+    await loadTrip();
+  }
+
+  let actCityId = null;
+  function openAddActivity(stopId, cityId) {
+    activeStopId = stopId;
+    actCityId = cityId;
+    document.getElementById('act-search').value = '';
+    document.getElementById('act-results').innerHTML = '<div class="spinner"></div>';
+    document.getElementById('activity-modal').style.display = 'flex';
+    loadActivities('', cityId);
+  }
+
+  function closeActivityModal() {
+    document.getElementById('activity-modal').style.display = 'none';
+    activeStopId = null;
+  }
+
+  let actTimer;
+  function searchActivities(q) {
+    clearTimeout(actTimer);
+    actTimer = setTimeout(() => loadActivities(q, actCityId), 300);
+  }
+
+  async function loadActivities(q, cityId) {
+    let url = `/api/activities?limit=12&city_id=${cityId}`;
+    if (q) url += `&q=${encodeURIComponent(q)}`;
+    const data = await API.get(url);
+    const el = document.getElementById('act-results');
+    if (!data.activities || data.activities.length === 0) {
+      el.innerHTML = '<p class="text-muted text-center mt-2">No activities found</p>';
+      return;
+    }
+    el.innerHTML = data.activities.map(a => `
+      <div class="activity-row" style="border-bottom:1px solid #f1f0ff;padding:0.75rem 0">
+        <div>
+          <span class="activity-chip">${a.category_name}</span>
+          <strong style="margin-left:0.4rem">${a.activity_name}</strong>
+          <div class="text-muted" style="font-size:0.8rem;margin-top:0.2rem">
+            ${a.estimated_duration_minutes}min · ${fmtMoney(a.estimated_cost)} · ★ ${a.rating}
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="addActivity(${a.activity_id})">Add</button>
+      </div>`).join('');
+  }
+
+  async function addActivity(activityId) {
+    const data = await API.post(`/api/trips/${tripId}/stops/${activeStopId}/activities`, { activity_id: activityId });
+    if (data.error) return showAlert(data.error);
+    closeActivityModal();
+    await loadTrip();
+  }
+
+  async function removeActivity(stopId, saId) {
+    await API.del(`/api/trips/${tripId}/stops/${stopId}/activities/${saId}`);
+    await loadTrip();
+  }
+
+  document.addEventListener('click', (e) => {
+    const results = document.getElementById('city-results');
+    if (results && !results.contains(e.target) && e.target.id !== 'city-search') {
+      results.style.display = 'none';
+    }
+  });
+</script>
+  </div>
+</div>
+</body>

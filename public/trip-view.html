@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traveloop — Itinerary</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/api.js"></script>
+  <script src="js/layout.js"></script>
+</head>
+<body data-page="view">
+
+<div id="__main" class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Trip Itinerary</span>
+    <div class="topbar-actions"></div>
+  </div>
+  <div class="page-wrap">
+    <div id="__trip-subnav"></div>
+    <div id="alert" class="alert" style="display:none;"></div>
+<div class="container">
+  <div class="page-header">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 id="trip-title">Loading...</h1>
+        <p id="trip-dates" class="text-muted"></p>
+      </div>
+      <div class="flex gap-1">
+        <a id="builder-link" href="#" class="btn btn-secondary">Edit Itinerary</a>
+        <a id="budget-link" href="#" class="btn btn-secondary">Budget</a>
+        <a id="checklist-link" href="#" class="btn btn-secondary">Checklist</a>
+        <a id="notes-link" href="#" class="btn btn-secondary">Notes</a>
+        <a id="invoice-link" href="#" class="btn btn-secondary">Invoice</a>
+        <button class="btn btn-primary" onclick="shareTrip()">Share</button>
+      </div>
+    </div>
+    <div id="share-result" class="alert alert-success" style="display:none;margin-top:0.75rem;"></div>
+  </div>
+
+  
+
+  <div class="tab-bar">
+    <button class="active" onclick="setView('timeline')">Timeline</button>
+    <button onclick="setView('list')">List View</button>
+  </div>
+
+  <div id="itinerary-content"><div class="spinner"></div></div>
+</div>
+
+
+<script>
+  const tripId = getParam('id');
+  let tripData = null;
+  let currentView = 'timeline';
+
+  (async () => {
+    const user = await checkAuth();
+    if (!user) return;
+    setNavUser(user);
+    if (!tripId) return window.location.href = 'trips.html';
+    document.getElementById('builder-link').href   = `trip-builder.html?id=${tripId}`;
+    document.getElementById('budget-link').href    = `trip-budget.html?id=${tripId}`;
+    document.getElementById('checklist-link').href = `trip-checklist.html?id=${tripId}`;
+    document.getElementById('notes-link').href     = `trip-notes.html?id=${tripId}`;
+    document.getElementById('invoice-link').href   = `trip-invoice.html?id=${tripId}`;
+    await loadTrip();
+  })();
+
+  async function loadTrip() {
+    const data = await API.get(`/api/trips/${tripId}`);
+    if (data.error) return showAlert(data.error);
+    tripData = data;
+    document.getElementById('trip-title').textContent = data.trip.title;
+    document.getElementById('trip-dates').textContent = `${fmt(data.trip.start_date)} — ${fmt(data.trip.end_date)}`;
+    renderView();
+  }
+
+  function setView(view) {
+    currentView = view;
+    document.querySelectorAll('.tab-bar button').forEach((b, i) => {
+      b.classList.toggle('active', (view === 'timeline' && i === 0) || (view === 'list' && i === 1));
+    });
+    renderView();
+  }
+
+  function renderView() {
+    if (currentView === 'timeline') renderTimeline();
+    else renderList();
+  }
+
+  function renderTimeline() {
+    const el = document.getElementById('itinerary-content');
+    const stops = tripData.stops || [];
+    if (stops.length === 0) {
+      el.innerHTML = `<div class="empty-state"><h3>No stops yet</h3><p>Add cities in the builder to build your itinerary.</p><a href="/trip-builder.html?id=${tripId}" class="btn btn-primary mt-2">Open Builder</a></div>`;
+      return;
+    }
+    el.innerHTML = `<div class="timeline">${stops.map(s => timelineStop(s)).join('')}</div>`;
+  }
+
+  function timelineStop(s) {
+    const days = s.arrival_date && s.departure_date
+      ? Math.max(1, Math.ceil((new Date(s.departure_date) - new Date(s.arrival_date)) / 86400000))
+      : null;
+    return `<div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="card mb-2">
+        <div class="card-body">
+          <div class="flex items-center justify-between mb-1">
+            <div>
+              <h3>${s.city_name} <span class="text-muted" style="font-weight:400;font-size:0.9rem">${s.country_name}</span></h3>
+              <p class="text-muted">${fmt(s.arrival_date)} — ${fmt(s.departure_date)}${days ? ` · ${days} day${days > 1 ? 's' : ''}` : ''}</p>
+            </div>
+            <span class="badge badge-primary">~$${s.avg_daily_cost}/day</span>
+          </div>
+          ${(s.activities || []).length > 0 ? `
+          <div style="margin-top:1rem">
+            <p class="text-muted mb-1" style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.5px">Activities</p>
+            <div style="display:flex;flex-direction:column;gap:0.4rem">
+              ${s.activities.map(a => `
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:0.5rem 0.75rem;background:#f8f9ff;border-radius:8px">
+                  <div>
+                    <span class="activity-chip">${a.category_name}</span>
+                    <strong style="margin-left:0.4rem;font-size:0.9rem">${a.activity_name}</strong>
+                    ${a.scheduled_time ? `<span class="text-muted" style="margin-left:0.4rem;font-size:0.8rem">${a.scheduled_time}</span>` : ''}
+                  </div>
+                  <span class="text-muted">${fmtMoney(a.actual_cost || a.estimated_cost)}</span>
+                </div>`).join('')}
+            </div>
+          </div>` : ''}
+          ${s.notes ? `<p class="text-muted mt-2" style="font-size:0.85rem;font-style:italic">${s.notes}</p>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function renderList() {
+    const el = document.getElementById('itinerary-content');
+    const stops = tripData.stops || [];
+    if (stops.length === 0) {
+      el.innerHTML = `<div class="empty-state"><h3>No stops yet</h3></div>`;
+      return;
+    }
+    el.innerHTML = `<div class="grid grid-2">${stops.map(s => `
+      <div class="card">
+        <img src="${s.city_image || ''}" style="width:100%;height:120px;object-fit:cover" onerror="this.style.background='linear-gradient(135deg,#6c63ff,#a78bfa)'" alt="${s.city_name}">
+        <div class="card-body">
+          <h3>${s.city_name}</h3>
+          <p class="text-muted">${fmt(s.arrival_date)} — ${fmt(s.departure_date)}</p>
+          <p class="text-muted mt-1">${(s.activities || []).length} activities planned</p>
+        </div>
+      </div>`).join('')}</div>`;
+  }
+
+  async function shareTrip() {
+    const data = await API.post(`/api/share/generate/${tripId}`, { expires_in_days: 30 });
+    if (data.error) return showAlert(data.error);
+    const url = `${window.location.origin}/share.html?token=${data.share_token}`;
+    const el = document.getElementById('share-result');
+    el.innerHTML = `Link: <a href="${url}" target="_blank">${url}</a>`;
+    el.style.display = 'block';
+    navigator.clipboard?.writeText(url);
+  }
+</script>
+  </div>
+</div>
+</body>
