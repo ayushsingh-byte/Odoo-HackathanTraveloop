@@ -8,7 +8,7 @@ const rateLimit = require('express-rate-limit');
 const app = express();
 
 app.use(require('helmet')());
-app.use(require('cors')({ origin: ['http://localhost:5173', 'http://localhost:3000'], credentials: true }));
+app.use(require('cors')({ origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'], credentials: true }));
 
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, message: { error: 'Too many requests' } });
 app.use('/api/auth/login', authLimiter);
@@ -34,7 +34,8 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     maxAge: 86400000,
-    httpOnly: true
+    httpOnly: true,
+    sameSite: 'lax'
   }
 }));
 

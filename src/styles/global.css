@@ -527,8 +527,8 @@ textarea.form-control { resize: vertical; }
 
 /* ─── DARK TRIP PAGE OVERRIDES ─── */
 .dark-trip-page {
-  --surface: #1c1c2e;
-  --surface-2: #22223a;
+  --surface: rgba(20,20,30,0.95);
+  --surface-2: rgba(255,255,255,0.06);
   --bg: #0a0a0a;
   --text: #f8fafc;
   --text-muted: rgba(255,255,255,0.5);
@@ -538,28 +538,28 @@ textarea.form-control { resize: vertical; }
 .dark-trip-page h1, .dark-trip-page h2, .dark-trip-page h3 { color: #f8fafc; }
 .dark-trip-page .page-header p, .dark-trip-page p { color: rgba(255,255,255,0.55); }
 .dark-trip-page .card {
-  background: #1c1c2e !important;
+  background: rgba(20,20,30,0.95) !important;
   border: 1px solid rgba(255,255,255,0.14) !important;
   box-shadow: 0 4px 20px rgba(0,0,0,0.4);
 }
 .dark-trip-page .card-body { color: #f8fafc; }
 .dark-trip-page .form-control {
-  background: #22223a !important;
+  background: rgba(255,255,255,0.06) !important;
   border-color: rgba(255,255,255,0.18) !important;
   color: #f8fafc !important;
 }
 .dark-trip-page .form-control::placeholder { color: rgba(255,255,255,0.3) !important; }
-.dark-trip-page .form-control:focus { border-color: #c9a84c !important; background: #2a2a42 !important; outline: none; }
-.dark-trip-page select.form-control option { background: #1c1c2e; color: #f8fafc; }
+.dark-trip-page .form-control:focus { border-color: #c9a84c !important; background: rgba(255,255,255,0.1) !important; outline: none; }
+.dark-trip-page select.form-control option { background: rgba(20,20,30,0.95); color: #f8fafc; }
 .dark-trip-page .form-label { color: rgba(255,255,255,0.45); }
 .dark-trip-page .btn-primary { background: #c9a84c !important; color: #0a0a0a !important; font-weight: 600; border: none; }
 .dark-trip-page .btn-primary:hover { background: #e0bb5e !important; }
-.dark-trip-page .btn-secondary { background: #22223a !important; color: rgba(255,255,255,0.75) !important; border: 1px solid rgba(255,255,255,0.14) !important; }
+.dark-trip-page .btn-secondary { background: rgba(255,255,255,0.06) !important; color: rgba(255,255,255,0.75) !important; border: 1px solid rgba(255,255,255,0.14) !important; }
 .dark-trip-page .btn-secondary:hover { background: #2e2e4a !important; color: #f8fafc !important; }
 .dark-trip-page .btn-danger { background: rgba(239,68,68,0.18) !important; color: #f87171 !important; border: 1px solid rgba(239,68,68,0.35) !important; }
 .dark-trip-page .btn-danger:hover { background: rgba(239,68,68,0.35) !important; }
 .dark-trip-page .stat-card {
-  background: #1c1c2e !important;
+  background: rgba(20,20,30,0.95) !important;
   border: 1px solid rgba(255,255,255,0.14) !important;
   border-radius: 12px; padding: 1.25rem; text-align: center;
 }
@@ -573,7 +573,7 @@ textarea.form-control { resize: vertical; }
 .dark-trip-page .empty-state h3 { color: rgba(255,255,255,0.65) !important; }
 .dark-trip-page .empty-state p { color: rgba(255,255,255,0.38) !important; }
 .dark-trip-page .modal-overlay { background: rgba(0,0,0,0.88) !important; }
-.dark-trip-page .modal { background: #16162a !important; border: 1px solid rgba(255,255,255,0.14) !important; }
+.dark-trip-page .modal { background: rgba(15,15,25,0.98) !important; border: 1px solid rgba(255,255,255,0.14) !important; }
 .dark-trip-page .modal-header { border-bottom-color: rgba(255,255,255,0.1) !important; }
 .dark-trip-page .modal-header h3 { color: #f8fafc !important; }
 .dark-trip-page .modal-footer { border-top-color: rgba(255,255,255,0.1) !important; }
@@ -583,17 +583,17 @@ textarea.form-control { resize: vertical; }
 .dark-trip-page .badge-primary { background: rgba(201,168,76,0.18) !important; color: #c9a84c !important; }
 .dark-trip-page .badge-gray { background: rgba(255,255,255,0.1) !important; color: rgba(255,255,255,0.55) !important; }
 .dark-trip-page .badge-danger { background: rgba(239,68,68,0.18) !important; color: #f87171 !important; }
-.dark-trip-page .note-card { background: #1c1c2e !important; border: 1px solid rgba(255,255,255,0.14) !important; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
+.dark-trip-page .note-card { background: rgba(20,20,30,0.95) !important; border: 1px solid rgba(255,255,255,0.14) !important; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
 .dark-trip-page .note-meta { color: rgba(255,255,255,0.38); font-size: 0.8rem; margin-bottom: 0.5rem; }
 .dark-trip-page .checklist-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
 .dark-trip-page strong { color: #f8fafc; }
 .dark-trip-page .text-muted { color: rgba(255,255,255,0.45) !important; }
-.dark-trip-page .stop-card { background: #1c1c2e !important; border-color: rgba(255,255,255,0.14) !important; }
+.dark-trip-page .stop-card { background: rgba(20,20,30,0.95) !important; border-color: rgba(255,255,255,0.14) !important; }
 .dark-trip-page .stop-header { background: transparent; }
 .dark-trip-page .stop-body { border-top-color: rgba(255,255,255,0.08) !important; }
 .dark-trip-page .activity-row { border-bottom-color: rgba(255,255,255,0.08) !important; }
-.dark-trip-page .city-results-drop { background: #1c1c2e !important; border-color: rgba(255,255,255,0.14) !important; }
-.dark-trip-page .city-result-item:hover { background: #22223a !important; }
+.dark-trip-page .city-results-drop { background: rgba(20,20,30,0.95) !important; border-color: rgba(255,255,255,0.14) !important; }
+.dark-trip-page .city-result-item:hover { background: rgba(255,255,255,0.06) !important; }
 .dark-trip-page .city-result-item { color: #f8fafc; }
 .dark-trip-page .section-title span { color: #f8fafc; }
 .dark-trip-page .section-title a { color: #c9a84c; }
@@ -603,7 +603,7 @@ textarea.form-control { resize: vertical; }
 .dark-trip-page .alert-error { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
 .dark-trip-page .alert-success { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
 .dark-trip-page .over-budget-banner { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
-.dark-trip-page .page-header { background: #1c1c2e; border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; }
+.dark-trip-page .page-header { background: rgba(20,20,30,0.95); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; }
 .dark-trip-page .page-header h1 { color: #f8fafc; margin-bottom: 0.25rem; }
 .dark-trip-page .page-header p { color: rgba(255,255,255,0.5) !important; }
 .dark-trip-page .container { padding: 0 1.5rem; }

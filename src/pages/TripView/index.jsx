@@ -55,10 +55,10 @@ export default function TripView() {
   );
 
   const S = {
-    pageCard: { background: '#1c1c2e', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: '1.5rem', marginBottom: '1.5rem' },
+    pageCard: { background: 'rgba(20,20,30,0.95)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: '1.5rem', marginBottom: '1.5rem' },
     tabBtn: (active) => ({ padding: '0.55rem 1.25rem', borderRadius: 20, border: `1px solid ${active ? 'rgba(201,168,76,0.4)' : 'rgba(255,255,255,0.1)'}`, background: active ? 'rgba(201,168,76,0.12)' : 'transparent', color: active ? '#c9a84c' : 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '0.875rem', fontWeight: active ? 600 : 400, transition: 'all 0.2s' }),
     actRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.75rem', background: 'rgba(255,255,255,0.05)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' },
-    emptyCard: { background: '#1c1c2e', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: '3rem 2rem', textAlign: 'center', marginTop: '1rem' },
+    emptyCard: { background: 'rgba(20,20,30,0.95)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: '3rem 2rem', textAlign: 'center', marginTop: '1rem' },
   };
 
   return (

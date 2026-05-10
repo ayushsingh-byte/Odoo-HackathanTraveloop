@@ -154,7 +154,7 @@ export default function TripBuilder() {
     <div className="container">
       {alert && <div className={`alert alert-${alert.type}`}>{alert.msg}</div>}
       {tripSubNav}
-      <div style={{ background: '#1c1c2e', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+      <div style={{ background: 'rgba(20,20,30,0.95)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ color: '#f8fafc', fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' }}>{trip.title}</h1>
           <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.875rem' }}>Add stops, cities, and activities to your trip</p>
@@ -177,7 +177,7 @@ export default function TripBuilder() {
       `}</style>
 
       {stops.length === 0 ? (
-        <div style={{ background: '#1c1c2e', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: '3rem 2rem', textAlign: 'center', marginTop: '1rem' }}>
+        <div style={{ background: 'rgba(20,20,30,0.95)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: '3rem 2rem', textAlign: 'center', marginTop: '1rem' }}>
           <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🗺️</div>
           <h3 style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '0.5rem' }}>No stops yet</h3>
           <p style={{ color: 'rgba(255,255,255,0.4)', marginBottom: '1.5rem' }}>Add your first city stop to begin building your itinerary.</p>
