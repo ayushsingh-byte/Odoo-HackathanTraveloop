@@ -89,21 +89,23 @@ export default function TripChecklist() {
     <div className="container" style={{ maxWidth: 720 }}>
       {alert && <div className={`alert alert-${alert.type}`}>{alert.msg}</div>}
       {tripSubNav}
-      <div className="page-header flex items-center justify-between">
+      <div style={{ background: '#1c1c2e', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: '1.25rem 1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
         <div>
-          <h1>Packing Checklist</h1>
-          <p>{tripTitle}</p>
+          <h1 style={{ color: '#f8fafc', fontSize: '1.5rem', fontWeight: 700 }}>Packing Checklist</h1>
+          <p style={{ color: 'rgba(255,255,255,0.5)' }}>{tripTitle}</p>
+          <strong style={{ color: '#f8fafc' }}>{packed}/{total} packed</strong>
         </div>
-        <div className="flex gap-1">
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <span style={{ color: '#c9a84c', fontWeight: 600 }}>{pct}%</span>
           <button className="btn btn-secondary" onClick={resetAll}>Reset All</button>
           <Link to={`/trip/view?id=${tripId}`} className="btn btn-secondary">← Back</Link>
         </div>
       </div>
 
-      <div className="card mb-3">
+      <div className="card mb-3" style={{ background: '#1c1c2e', border: '1px solid rgba(255,255,255,0.12)' }}>
         <div className="card-body">
           <div className="flex items-center justify-between mb-1">
-            <strong>{packed}/{total} packed</strong>
+            <strong style={{ color: '#f8fafc' }}>{packed}/{total} packed</strong>
             <span className="badge badge-primary">{pct}%</span>
           </div>
           <div className="progress-bar-wrap">
@@ -112,12 +114,12 @@ export default function TripChecklist() {
         </div>
       </div>
 
-      <div className="card mb-3">
+      <div className="card mb-3" style={{ background: '#1c1c2e', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16 }}>
         <div className="card-body">
-          <h3 className="mb-2">Add Item</h3>
+          <h3 className="mb-2" style={{ color: '#f8fafc' }}>Add Item</h3>
           <div className="flex gap-2">
-            <input type="text" className="form-control" placeholder="Passport, Laptop charger..." style={{ flex: 1 }} value={newItem} onChange={e => setNewItem(e.target.value)} onKeyDown={e => e.key === 'Enter' && addItem()} />
-            <select className="form-control" style={{ maxWidth: 160 }} value={newCatId} onChange={e => setNewCatId(e.target.value)}>
+            <input type="text" className="form-control" placeholder="Passport, Laptop charger..." style={{ flex: 1, background: '#22223a', borderColor: 'rgba(255,255,255,0.18)', color: '#f8fafc' }} value={newItem} onChange={e => setNewItem(e.target.value)} onKeyDown={e => e.key === 'Enter' && addItem()} />
+            <select className="form-control" style={{ maxWidth: 160, background: '#22223a', borderColor: 'rgba(255,255,255,0.18)', color: '#f8fafc' }} value={newCatId} onChange={e => setNewCatId(e.target.value)}>
               <option value="">Category</option>
               {categories.map(c => <option key={c.category_id} value={c.category_id}>{c.category_name}</option>)}
             </select>
@@ -131,7 +133,7 @@ export default function TripChecklist() {
       ) : Object.entries(grouped).map(([cat, catItems]) => {
         const catPacked = catItems.filter(i => i.is_packed).length;
         return (
-          <div key={cat} className="card mb-2">
+          <div key={cat} className="card mb-2" style={{ background: '#1c1c2e', border: '1px solid rgba(255,255,255,0.12)' }}>
             <div className="card-body">
               <div className="flex items-center justify-between mb-1">
                 <h3>{cat}</h3>

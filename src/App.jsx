@@ -11,7 +11,7 @@ import CitySearch from './pages/CitySearch';
 import ActivitySearch from './pages/ActivitySearch';
 import ItineraryTimeline from './pages/ItineraryTimeline';
 import PackingChecklist from './pages/PackingChecklist';
-import TripNotes from './pages/TripNotes';
+import TripNotes from './pages/TripNotes/index';
 import SharedItinerary from './pages/SharedItinerary';
 import MyTrips from './pages/MyTrips';
 import Profile from './pages/Profile';

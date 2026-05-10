@@ -109,10 +109,10 @@ export default function TripBudget() {
     <div className="container">
       {alert && <div className={`alert alert-${alert.type}`}>{alert.msg}</div>}
       {tripSubNav}
-      <div className="page-header flex items-center justify-between">
+      <div style={{ background: '#1c1c2e', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1>{tripTitle}</h1>
-          <p>Track spending by category</p>
+          <h1 style={{ color: '#f8fafc', marginBottom: '0.25rem', fontSize: '1.5rem', fontWeight: 700 }}>{tripTitle}</h1>
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.875rem' }}>Track spending by category</p>
         </div>
         <Link to={`/trip/view?id=${tripId}`} className="btn btn-secondary">← Back to Trip</Link>
       </div>
@@ -129,21 +129,21 @@ export default function TripBudget() {
             ['Remaining', fmtMoney(budget.remaining, budget.currency)],
             [`Avg/Day (${tripDays}d)`, fmtMoney(budget.total_cost / tripDays, budget.currency)],
           ].map(([label, val]) => (
-            <div key={label} className="stat-card">
-              <div className="stat-value">{val}</div>
-              <div className="stat-label">{label}</div>
+            <div key={label} className="stat-card" style={{ background: '#1c1c2e', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 12, padding: '1.25rem', textAlign: 'center' }}>
+              <div className="stat-value" style={{ color: '#f8fafc', fontSize: '1.4rem', fontWeight: 700 }}>{val}</div>
+              <div className="stat-label" style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.82rem' }}>{label}</div>
             </div>
           ))}
         </div>
       )}
 
       <div className="grid grid-2 mb-3">
-        <div className="card"><div className="card-body"><h3 className="mb-2">Spending Breakdown</h3><canvas ref={pieRef} height="220" /></div></div>
-        <div className="card"><div className="card-body"><h3 className="mb-2">By Category</h3><canvas ref={barRef} height="220" /></div></div>
+        <div className="card" style={{ background: '#1c1c2e', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 16 }}><div className="card-body" style={{ color: '#f8fafc' }}><h3 className="mb-2">Spending Breakdown</h3><canvas ref={pieRef} height="220" /></div></div>
+        <div className="card" style={{ background: '#1c1c2e', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 16 }}><div className="card-body" style={{ color: '#f8fafc' }}><h3 className="mb-2">By Category</h3><canvas ref={barRef} height="220" /></div></div>
       </div>
 
-      <div className="card mb-3">
-        <div className="card-body">
+      <div className="card mb-3" style={{ background: '#1c1c2e', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 16 }}>
+        <div className="card-body" style={{ color: '#f8fafc' }}>
           <h3 className="mb-2">Update Budget</h3>
           <div className="grid grid-2">
             {[
@@ -156,13 +156,13 @@ export default function TripBudget() {
               ['Misc Cost', 'misc_cost'],
             ].map(([label, field, type]) => (
               <div key={field} className="form-group">
-                <label className="form-label">{label}</label>
+                <label className="form-label" style={{ color: 'rgba(255,255,255,0.45)' }}>{label}</label>
                 {type === 'select' ? (
-                  <select className="form-control" value={form.currency} onChange={set('currency')}>
+                  <select className="form-control" style={{ background: '#22223a', borderColor: 'rgba(255,255,255,0.18)', color: '#f8fafc' }} value={form.currency} onChange={set('currency')}>
                     {['USD','EUR','GBP','JPY','INR','AUD'].map(c => <option key={c}>{c}</option>)}
                   </select>
                 ) : (
-                  <input type="number" className="form-control" min="0" value={form[field]} onChange={set(field)} />
+                  <input type="number" className="form-control" style={{ background: '#22223a', borderColor: 'rgba(255,255,255,0.18)', color: '#f8fafc' }} min="0" value={form[field]} onChange={set(field)} />
                 )}
               </div>
             ))}
