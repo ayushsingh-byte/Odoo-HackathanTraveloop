@@ -35,6 +35,7 @@ export default function Home() {
 
   const [destinations, setDestinations] = useState([]);
   const [featuredTrips, setFeaturedTrips] = useState([]);
+  const [budgetSummary, setBudgetSummary] = useState([]);
 
   useEffect(() => {
     API.get('/api/cities?limit=6').then(data => {
@@ -48,6 +49,8 @@ export default function Home() {
         ...(data.upcoming || []).map(t => ({ ...t, status: 'upcoming' })),
       ];
       setFeaturedTrips(all.slice(0, 3));
+      const active = [...(data.ongoing||[]), ...(data.upcoming||[])].slice(0, 3);
+      setBudgetSummary(active);
     });
   }, []);
 
@@ -102,6 +105,51 @@ export default function Home() {
           </div>
         </motion.div>
       </section>
+
+      {budgetSummary.length > 0 && (
+        <section className="px-6 lg:px-8 py-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <span className="font-body text-label uppercase tracking-[0.2em] text-luxury-gold mb-1 block" style={{fontSize: '0.65rem'}}>Your Trips</span>
+                <h2 className="font-display text-2xl font-semibold text-luxury-white">Budget Overview</h2>
+              </div>
+              <Link to="/my-trips" className="font-body text-sm text-white/40 hover:text-luxury-gold transition-colors">View All →</Link>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {budgetSummary.map(t => {
+                const spent = parseFloat(t.total_cost) || 0;
+                const budget = parseFloat(t.total_budget) || 0;
+                const pct = budget > 0 ? Math.min(100, Math.round((spent / budget) * 100)) : 0;
+                const over = budget > 0 && spent > budget;
+                return (
+                  <Link key={t.trip_id} to={`/trip/budget?id=${t.trip_id}`} style={{textDecoration:'none'}}
+                    className="glass-elevated p-5 rounded-2xl hover:border-luxury-gold/20 transition-all duration-300 cursor-pointer block">
+                    <h3 className="font-display text-base font-semibold text-luxury-white mb-1 truncate">{t.title}</h3>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="font-body text-xs text-white/40">{t.stop_count} stops</span>
+                      <span className={`font-body text-xs font-semibold ${over ? 'text-red-400' : 'text-emerald-400'}`}>
+                        {over ? '⚠ Over Budget' : budget > 0 ? `${100 - pct}% remaining` : 'No budget set'}
+                      </span>
+                    </div>
+                    {budget > 0 && (
+                      <>
+                        <div style={{ height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden' }}>
+                          <div style={{ width: `${pct}%`, height: '100%', background: over ? '#ef4444' : '#c9a84c', borderRadius: 2, transition: 'width 0.5s ease' }} />
+                        </div>
+                        <div className="flex justify-between mt-2">
+                          <span className="font-body text-[10px] text-white/30">${spent.toFixed(0)} spent</span>
+                          <span className="font-body text-[10px] text-white/30">${budget.toFixed(0)} budget</span>
+                        </div>
+                      </>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="py-24 lg:py-32 px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">

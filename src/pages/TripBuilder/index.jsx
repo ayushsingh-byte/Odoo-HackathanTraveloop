@@ -19,6 +19,7 @@ export default function TripBuilder() {
   const [stopForm, setStopForm] = useState({ arrival_date: '', departure_date: '', notes: '' });
   const [actSearch, setActSearch] = useState('');
   const [activities, setActivities] = useState([]);
+  const [actFilter, setActFilter] = useState({ type: '', maxCost: '' });
   const [alert, setAlert] = useState(null);
   const citySearchTimer = useRef(null);
   const actTimer = useRef(null);
@@ -32,6 +33,8 @@ export default function TripBuilder() {
     if (!tripId) { navigate('/trips'); return; }
     loadTrip();
   }, [tripId]);
+
+  useEffect(() => { if (actCityId) loadActivities(actSearch, actCityId); }, [actFilter]);
 
   async function loadTrip() {
     const data = await API.get(`/api/trips/${tripId}`);
@@ -73,6 +76,18 @@ export default function TripBuilder() {
     await loadTrip();
   }
 
+  async function moveStop(stopId, direction) {
+    const idx = stops.findIndex(s => s.stop_id === stopId);
+    if (direction === 'up' && idx === 0) return;
+    if (direction === 'down' && idx === stops.length - 1) return;
+    const newStops = [...stops];
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    [newStops[idx], newStops[swapIdx]] = [newStops[swapIdx], newStops[idx]];
+    const order = newStops.map(s => s.stop_id);
+    await API.put(`/api/trips/${tripId}/stops/reorder`, { order });
+    await loadTrip();
+  }
+
   async function deleteStop(stopId) {
     if (!confirm('Remove this stop and all its activities?')) return;
     await API.del(`/api/trips/${tripId}/stops/${stopId}`);
@@ -88,10 +103,13 @@ export default function TripBuilder() {
   }
 
   async function loadActivities(q, cityId) {
-    let url = `/api/activities?limit=12&city_id=${cityId}`;
+    let url = `/api/activities?limit=15&city_id=${cityId}`;
     if (q) url += `&q=${encodeURIComponent(q)}`;
+    if (actFilter.type) url += `&category=${encodeURIComponent(actFilter.type)}`;
     const data = await API.get(url);
-    setActivities(data.activities || []);
+    let acts = data.activities || [];
+    if (actFilter.maxCost) acts = acts.filter(a => parseFloat(a.estimated_cost) <= parseFloat(actFilter.maxCost));
+    setActivities(acts);
   }
 
   function onActSearch(q) {
@@ -172,6 +190,12 @@ export default function TripBuilder() {
               <span className="text-muted" style={{ marginLeft: '0.5rem', fontSize: '0.85rem' }}>{s.country_name}</span>
             </div>
             <span className="text-muted" style={{ fontSize: '0.82rem' }}>{fmt(s.arrival_date)} → {fmt(s.departure_date)}</span>
+            <div style={{ display: 'flex', gap: '0.25rem' }}>
+              <button className="btn btn-ghost btn-sm" onClick={() => moveStop(s.stop_id, 'up')} title="Move up"
+                style={{ padding: '0.25rem 0.4rem', opacity: i === 0 ? 0.2 : 0.7 }}>↑</button>
+              <button className="btn btn-ghost btn-sm" onClick={() => moveStop(s.stop_id, 'down')} title="Move down"
+                style={{ padding: '0.25rem 0.4rem', opacity: i === stops.length - 1 ? 0.2 : 0.7 }}>↓</button>
+            </div>
             <button className="btn btn-secondary btn-sm" onClick={() => openActModal(s.stop_id, s.city_id)}>+ Activity</button>
             <button className="btn btn-danger btn-sm" onClick={() => deleteStop(s.stop_id)}>✕</button>
           </div>
@@ -250,6 +274,18 @@ export default function TripBuilder() {
               <button className="modal-close" onClick={() => setActModal(false)}>✕</button>
             </div>
             <div className="modal-body">
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                <select value={actFilter.type} onChange={e => { setActFilter(f => ({...f, type: e.target.value})); }}
+                  className="form-control" style={{ flex: 1, background: 'rgba(255,255,255,0.06)', color: '#faf9f6', border: '1px solid rgba(255,255,255,0.12)', fontSize: '0.8rem' }}>
+                  <option value="">All Types</option>
+                  <option value="Sightseeing">Sightseeing</option>
+                  <option value="Food & Dining">Food & Dining</option>
+                  <option value="Adventure">Adventure</option>
+                </select>
+                <input type="number" placeholder="Max cost $" value={actFilter.maxCost}
+                  onChange={e => setActFilter(f => ({...f, maxCost: e.target.value}))}
+                  className="form-control" style={{ width: 100, background: 'rgba(255,255,255,0.06)', color: '#faf9f6', border: '1px solid rgba(255,255,255,0.12)', fontSize: '0.8rem' }} />
+              </div>
               <div className="form-group">
                 <label className="form-label">Search Activities</label>
                 <input type="text" className="form-control" placeholder="Search..." value={actSearch} onChange={e => onActSearch(e.target.value)} />

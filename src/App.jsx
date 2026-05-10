@@ -1,5 +1,6 @@
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import { SidebarProvider, useSidebar } from './context/SidebarContext';
 import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
@@ -109,10 +110,12 @@ function AppInner() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <SidebarProvider>
-        <AppInner />
-      </SidebarProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <SidebarProvider>
+          <AppInner />
+        </SidebarProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }

@@ -23,6 +23,14 @@ export default function Profile() {
     API.get('/api/trips').then(d => setTripStats({ ongoing: (d.ongoing || []).length, upcoming: (d.upcoming || []).length, completed: (d.completed || []).length }));
   }, []);
 
+  const deleteAccount = async () => {
+    if (!window.confirm('Permanently delete your account and all trip data? This cannot be undone.')) return;
+    const second = window.confirm('Are you absolutely sure? All your trips, notes, and data will be lost forever.');
+    if (!second) return;
+    await API.del('/api/auth/account');
+    logout();
+  };
+
   async function handleUpdate(e) {
     e.preventDefault();
     const data = await API.put('/api/auth/profile', {
@@ -99,6 +107,11 @@ export default function Profile() {
           <h3 style={{ color: '#ef4444', marginBottom: '0.5rem' }}>Danger Zone</h3>
           <p className="text-muted mb-2">Logging out will end your current session.</p>
           <button className="btn btn-danger" onClick={logout}>Logout</button>
+          <button onClick={deleteAccount}
+            className="btn-outline text-xs py-2 px-5 mt-3 w-full justify-center"
+            style={{ borderColor: 'rgba(239,68,68,0.3)', color: '#f87171', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            Delete Account
+          </button>
         </div>
       </div>
     </div>

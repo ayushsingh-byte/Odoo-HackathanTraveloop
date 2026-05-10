@@ -11,6 +11,7 @@ export default function TripBudget() {
   const navigate = useNavigate();
   const location = useLocation();
   const [tripTitle, setTripTitle] = useState('Budget');
+  const [tripDays, setTripDays] = useState(7);
   const [budget, setBudget] = useState(null);
   const [form, setForm] = useState({ total_budget: 0, currency: 'USD', transport_cost: 0, stay_cost: 0, food_cost: 0, activity_cost: 0, misc_cost: 0 });
   const [alert, setAlert] = useState(null);
@@ -26,7 +27,15 @@ export default function TripBudget() {
 
   useEffect(() => {
     if (!tripId) { navigate('/trips'); return; }
-    API.get(`/api/trips/${tripId}`).then(d => { if (d.trip) setTripTitle(`${d.trip.title} — Budget`); });
+    API.get(`/api/trips/${tripId}`).then(d => {
+      if (d.trip) {
+        setTripTitle(`${d.trip.title} — Budget`);
+        if (d.trip.start_date && d.trip.end_date) {
+          const days = Math.max(1, Math.ceil((new Date(d.trip.end_date) - new Date(d.trip.start_date)) / 86400000));
+          setTripDays(days);
+        }
+      }
+    });
     loadBudget();
   }, [tripId]);
 
@@ -118,7 +127,7 @@ export default function TripBudget() {
             ['Total Budget', fmtMoney(budget.total_budget, budget.currency)],
             ['Total Spent', fmtMoney(budget.total_cost, budget.currency)],
             ['Remaining', fmtMoney(budget.remaining, budget.currency)],
-            ['Avg per Day', fmtMoney(budget.total_cost / 7, budget.currency)],
+            [`Avg/Day (${tripDays}d)`, fmtMoney(budget.total_cost / tripDays, budget.currency)],
           ].map(([label, val]) => (
             <div key={label} className="stat-card">
               <div className="stat-value">{val}</div>

@@ -96,4 +96,15 @@ router.put('/profile', async (req, res) => {
   }
 });
 
+router.delete('/account', async (req, res) => {
+  if (!req.session.user) return res.status(401).json({ error: 'Not authenticated' });
+  const userId = req.session.user.user_id;
+  try {
+    await db.query('DELETE FROM users WHERE user_id = ?', [userId]);
+    req.session.destroy(() => res.json({ message: 'Account deleted' }));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

@@ -27,12 +27,25 @@ export default function CitySearch() {
   const [loading, setLoading] = useState(true);
   const [selectedCity, setSelectedCity] = useState(null);
   const [cityActivities, setCityActivities] = useState([]);
+  const [userTrips, setUserTrips] = useState([]);
+  const [addingToTrip, setAddingToTrip] = useState(false);
 
   const openCity = async (city) => {
     setSelectedCity(city);
     setCityActivities([]);
     const actsData = await API.get(`/api/activities?city_id=${city.id}&limit=10`);
     setCityActivities(actsData?.activities || []);
+    API.get('/api/trips').then(d => setUserTrips([...(d.ongoing||[]), ...(d.upcoming||[]), ...(d.undated||[])]));
+  };
+
+  const addCityToTrip = async (tripId, city) => {
+    const data = await API.post(`/api/trips/${tripId}/stops`, {
+      city_id: city.id,
+      position: 99,
+    });
+    if (data?.error) return;
+    setSelectedCity(null);
+    alert(`${city.name} added to trip!`);
   };
 
   useEffect(() => {
@@ -138,6 +151,22 @@ export default function CitySearch() {
                     ))}
                   </div>
                 </>
+              )}
+              {userTrips.length > 0 && (
+                <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                  <h3 style={{ fontFamily: 'Playfair Display, serif', color: '#faf9f6', fontSize: '1rem', marginBottom: '0.75rem' }}>Add to a Trip</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                    {userTrips.slice(0, 4).map(t => (
+                      <button key={t.trip_id} onClick={() => addCityToTrip(t.trip_id, selectedCity)}
+                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0.75rem', background: 'rgba(255,255,255,0.04)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer', color: '#faf9f6', fontSize: '0.875rem', transition: 'all 0.2s' }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(201,168,76,0.1)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}>
+                        <span>{t.title}</span>
+                        <span style={{ color: '#c9a84c', fontSize: '0.75rem', fontWeight: 600 }}>+ Add Stop</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           </div>

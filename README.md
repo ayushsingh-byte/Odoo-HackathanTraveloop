@@ -66,13 +66,16 @@
 
 | Layer | Technology |
 |---|---|
-| **Runtime** | Node.js |
-| **Framework** | Express.js |
+| **Runtime** | Node.js 18+ |
+| **Backend Framework** | Express.js |
 | **Database** | MySQL 8+ |
 | **Auth** | express-session + express-mysql-session + bcryptjs |
-| **Frontend** | Vanilla HTML / CSS / JavaScript (no framework, no build step) |
+| **Frontend** | React 18 + Vite |
+| **Routing** | React Router v6 |
+| **Animations** | Framer Motion |
+| **Styling** | Tailwind CSS + custom glassmorphism CSS |
 | **Charts** | Chart.js (admin panel) |
-| **Fonts/Icons** | Google Fonts (Outfit, Inter) + Font Awesome 6 |
+| **Fonts/Icons** | Google Fonts (Playfair Display, Inter) + Lucide React |
 | **UUID** | uuid v9 |
 
 ---
@@ -182,13 +185,13 @@ SESSION_SECRET=any_random_secret_string
 PORT=3000
 ```
 
-### Step 5 — Start the server
+### Step 5 — Run the app
 
 ```bash
-npm start
+npm run dev
 ```
 
-Open **http://localhost:3000** in your browser.
+This starts both the Express server (port 3000) and the Vite dev server (port 5173) concurrently. Open **http://localhost:5173** in your browser.
 
 ---
 
@@ -197,7 +200,7 @@ Open **http://localhost:3000** in your browser.
 | Role | Email | Password |
 |---|---|---|
 | **Admin** | `admin@traveloop.com` | `Admin@123` |
-| **User** | Create via Register | your choice |
+| **User** | Register via the app | your choice |
 
 > Admin account has access to the Admin Panel with full stats and user management.
 
