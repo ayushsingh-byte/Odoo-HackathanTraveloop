@@ -70,7 +70,7 @@ export default function TripInvoice() {
       <style>{`
         .invoice-wrap{display:grid;grid-template-columns:1fr 320px;gap:2rem}
         @media(max-width:900px){.invoice-wrap{grid-template-columns:1fr}}
-        .invoice-box{background:#fff;border:1.5px solid #e5e7eb;border-radius:16px;padding:2rem}
+        .invoice-box{background:#fff;color:#1f2937;border:1.5px solid #e5e7eb;border-radius:16px;padding:2rem}
         .invoice-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:2px solid #e5e7eb}
         .invoice-brand{font-size:1.5rem;font-weight:800;color:#6c63ff}
         .invoice-id{font-size:.85rem;color:#6b7280;margin-top:.25rem}
