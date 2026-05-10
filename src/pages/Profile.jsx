@@ -1,10 +1,17 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Camera, Globe, Award, Heart, Settings, LogOut } from 'lucide-react';
+import { MapPin, Camera, Globe, Award, Heart, Settings, LogOut, Check } from 'lucide-react';
 import GlassCard from '../components/GlassCard';
 import { userProfile, destinations } from '../data/mockData';
 
 export default function Profile() {
-  const { name, handle, bio, location, memberSince, stats, badges } = userProfile;
+  const [isEditing, setIsEditing] = useState(false);
+  const [profile, setProfile] = useState(userProfile);
+  const { name, handle, bio, location, memberSince, stats, badges } = profile;
+
+  const handleProfileChange = (field, value) => {
+    setProfile({ ...profile, [field]: value });
+  };
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -22,16 +29,38 @@ export default function Profile() {
               ✨
             </div>
             <div className="flex-1">
-              <h1 className="font-display text-3xl md:text-4xl font-bold text-luxury-white mb-1">{name}</h1>
+              {isEditing ? (
+                <input type="text" value={name} onChange={(e) => handleProfileChange('name', e.target.value)} className="bg-black/40 border-b border-luxury-gold text-3xl md:text-4xl font-bold text-luxury-white mb-2 focus:outline-none w-full" />
+              ) : (
+                <h1 className="font-display text-3xl md:text-4xl font-bold text-luxury-white mb-1">{name}</h1>
+              )}
               <p className="font-body text-sm text-luxury-gold mb-3">{handle}</p>
-              <p className="font-body text-sm text-white/50 max-w-lg mb-4">{bio}</p>
+              {isEditing ? (
+                <textarea value={bio} onChange={(e) => handleProfileChange('bio', e.target.value)} className="bg-black/40 border border-white/10 rounded-xl p-3 text-sm text-white/50 w-full mb-4 focus:outline-none focus:border-luxury-gold resize-none" rows={3} />
+              ) : (
+                <p className="font-body text-sm text-white/50 max-w-lg mb-4">{bio}</p>
+              )}
               <div className="flex items-center gap-4">
-                <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-white/30" /><span className="font-body text-xs text-white/40">{location}</span></span>
+                <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-white/30" />
+                  {isEditing ? (
+                    <input type="text" value={location} onChange={(e) => handleProfileChange('location', e.target.value)} className="bg-transparent border-b border-white/20 text-xs text-white/40 focus:outline-none" />
+                  ) : (
+                    <span className="font-body text-xs text-white/40">{location}</span>
+                  )}
+                </span>
                 <span className="font-body text-xs text-white/30">Member since {memberSince}</span>
               </div>
             </div>
             <div className="flex gap-3">
-              <button className="btn-outline text-xs py-2 px-5"><Settings className="w-3.5 h-3.5" />Edit</button>
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsEditing(!isEditing)} 
+                className={`btn-outline text-xs py-2 px-5 flex items-center gap-2 ${isEditing ? 'bg-luxury-gold text-luxury-black border-luxury-gold' : ''}`}
+              >
+                {isEditing ? <Check className="w-3.5 h-3.5" /> : <Settings className="w-3.5 h-3.5" />}
+                {isEditing ? 'Save' : 'Edit'}
+              </motion.button>
             </div>
           </motion.div>
 

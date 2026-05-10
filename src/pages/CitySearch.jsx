@@ -41,10 +41,17 @@ export default function CitySearch() {
             </div>
             <div className="flex gap-2 overflow-x-auto no-scrollbar w-full md:w-auto">
               {categories.map(c => (
-                <button key={c} onClick={() => setActive(c)}
+                <motion.button 
+                  key={c} 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setActive(c)}
                   className={`px-4 py-2.5 rounded-full font-body text-xs whitespace-nowrap transition-all duration-300 ${
                     active === c ? 'bg-luxury-gold text-luxury-black font-semibold' : 'glass text-white/60 hover:text-luxury-white'
-                  }`}>{c}</button>
+                  }`}
+                >
+                  {c}
+                </motion.button>
               ))}
             </div>
           </motion.div>

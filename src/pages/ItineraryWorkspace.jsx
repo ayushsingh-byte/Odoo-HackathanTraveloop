@@ -10,7 +10,35 @@ const typeIcons = { transport: Plane, hotel: Hotel, activity: Camera };
 
 export default function ItineraryWorkspace() {
   const [activeDay, setActiveDay] = useState(0);
-  const { tripName, destination, dates, days, budget, totalBudget, spent } = itineraryData;
+  const [itinerary, setItinerary] = useState(itineraryData);
+  const { tripName, destination, dates, days, budget, totalBudget, spent } = itinerary;
+
+  const handleAddDay = () => {
+    const newDayNum = days.length + 1;
+    const newDay = {
+      day: newDayNum,
+      date: 'TBD',
+      title: `Day ${newDayNum} Exploration`,
+      city: destination,
+      image: '/images/hero-bali.png',
+      activities: []
+    };
+    setItinerary({ ...itinerary, days: [...days, newDay] });
+    setActiveDay(newDayNum);
+  };
+
+  const handleAddActivity = (dayIndex) => {
+    const newActivity = {
+      time: '10:00 AM',
+      name: 'New Activity',
+      icon: '✨',
+      type: 'activity',
+      cost: 0
+    };
+    const newDays = [...days];
+    newDays[dayIndex].activities.push(newActivity);
+    setItinerary({ ...itinerary, days: newDays });
+  };
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-20 min-h-screen">
@@ -41,9 +69,14 @@ export default function ItineraryWorkspace() {
               {item}
             </button>
           ))}
-          <button className="w-full text-left px-3 py-2.5 rounded-xl font-body text-sm text-white/30 hover:text-luxury-gold hover:bg-luxury-gold/5 transition-all duration-300 flex items-center gap-3 mt-2">
+          <motion.button 
+            whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.05)' }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleAddDay}
+            className="w-full text-left px-3 py-2.5 rounded-xl font-body text-sm text-white/30 hover:text-luxury-gold transition-all duration-300 flex items-center gap-3 mt-2"
+          >
             <Plus className="w-4 h-4" /> Add Day
-          </button>
+          </motion.button>
 
           <div className="mt-8 pt-6 border-t border-white/5">
             <p className="font-body text-label uppercase tracking-[0.15em] text-white/30 mb-4 px-3">Quick Links</p>
@@ -133,9 +166,14 @@ export default function ItineraryWorkspace() {
                       })}
                     </div>
 
-                    <button className="mt-6 ml-12 flex items-center gap-2 font-body text-sm text-white/30 hover:text-luxury-gold transition-colors duration-300">
+                    <motion.button 
+                      whileHover={{ x: 5 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleAddActivity(activeDay - 1)}
+                      className="mt-6 ml-12 flex items-center gap-2 font-body text-sm text-white/30 hover:text-luxury-gold transition-colors duration-300"
+                    >
                       <Plus className="w-4 h-4" /> Add activity
-                    </button>
+                    </motion.button>
                   </>
                 );
               })()}
@@ -145,43 +183,56 @@ export default function ItineraryWorkspace() {
 
         {/* RIGHT: Budget Panel */}
         <motion.aside initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="w-72 shrink-0 border-l border-white/5 p-6 overflow-y-auto hidden xl:block">
-          <h3 className="font-display text-lg font-semibold text-luxury-white mb-6">Budget</h3>
+          <h3 className="font-display text-lg font-semibold text-luxury-white mb-6">Budget Overview</h3>
           
-          {/* Budget Ring */}
-          <div className="relative w-32 h-32 mx-auto mb-6">
-            <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="8" />
-              <circle cx="50" cy="50" r="42" fill="none" stroke="url(#goldGrad)" strokeWidth="8" strokeLinecap="round"
-                strokeDasharray={`${(spent / totalBudget) * 264} 264`} />
-              <defs><linearGradient id="goldGrad"><stop offset="0%" stopColor="#c9a84c" /><stop offset="100%" stopColor="#e8a87c" /></linearGradient></defs>
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="font-display text-xl font-bold text-luxury-white">{Math.round((spent / totalBudget) * 100)}%</span>
-              <span className="font-body text-[10px] text-white/40">spent</span>
-            </div>
-          </div>
-
-          <div className="flex justify-between items-center mb-6 text-center">
-            <div><p className="font-body text-xs text-white/40">Total</p><p className="font-body text-sm font-semibold text-luxury-white">${totalBudget.toLocaleString()}</p></div>
-            <div><p className="font-body text-xs text-white/40">Spent</p><p className="font-body text-sm font-semibold text-luxury-gold">${spent.toLocaleString()}</p></div>
-            <div><p className="font-body text-xs text-white/40">Left</p><p className="font-body text-sm font-semibold text-emerald-400">${(totalBudget - spent).toLocaleString()}</p></div>
+          {/* Premium Budget Cards */}
+          <div className="flex flex-col gap-3 mb-6">
+            <GlassCard padding="p-4" className="flex flex-col justify-center items-center text-center">
+              <p className="font-body text-[10px] text-white/40 uppercase tracking-wider mb-1">Total Limit</p>
+              <p className="font-display text-xl font-semibold text-luxury-white">${totalBudget.toLocaleString()}</p>
+            </GlassCard>
+            <GlassCard padding="p-4" className="flex flex-col justify-center items-center text-center bg-luxury-gold/5 border-luxury-gold/20 shadow-[0_0_15px_rgba(201,168,76,0.1)]">
+              <p className="font-body text-[10px] text-luxury-gold uppercase tracking-wider mb-1">Available</p>
+              <p className="font-display text-xl font-semibold text-emerald-400">${(totalBudget - spent).toLocaleString()}</p>
+            </GlassCard>
           </div>
 
           <div className="section-line mb-6" />
 
-          {/* Breakdown */}
-          <div className="space-y-3">
-            {Object.entries(budget).map(([key, val]) => (
-              <div key={key}>
-                <div className="flex justify-between mb-1">
-                  <span className="font-body text-xs text-white/50 capitalize">{key}</span>
-                  <span className="font-body text-xs text-luxury-white">${val.toLocaleString()}</span>
-                </div>
-                <div className="w-full h-1.5 rounded-full bg-white/5">
-                  <div className="h-full rounded-full bg-gradient-to-r from-luxury-gold to-luxury-peach" style={{ width: `${(val / totalBudget) * 100}%` }} />
-                </div>
-              </div>
-            ))}
+          {/* Horizontal Progress Bar */}
+          <div className="mb-8">
+            <div className="flex justify-between items-end mb-2">
+              <p className="font-body text-xs text-white/50">Total Spent</p>
+              <span className="font-body text-[10px] text-luxury-gold font-medium bg-luxury-gold/10 px-2 py-0.5 rounded-md">{Math.round((spent / totalBudget) * 100)}% Used</span>
+            </div>
+            <p className="font-display text-2xl font-bold text-luxury-white mb-3">${spent.toLocaleString()}</p>
+            
+            <div className="w-full h-2 rounded-full bg-black/40 border border-white/5 overflow-hidden mb-2 relative">
+              <motion.div initial={{ width: 0 }} animate={{ width: `${(spent / totalBudget) * 100}%` }} transition={{ duration: 1.5, ease: "easeOut" }} className="h-full rounded-full bg-gradient-to-r from-luxury-gold to-luxury-peach relative overflow-hidden">
+                <div className="absolute inset-0 bg-white/20 animate-pulse" />
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Category Breakdown */}
+          <div>
+            <h4 className="font-body text-xs text-white/40 uppercase tracking-wider mb-4">Expenses by Category</h4>
+            <div className="space-y-4">
+              {Object.entries(budget).map(([key, val], index) => (
+                <motion.div key={key} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.1 }} className="group">
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span className="font-body text-xs text-white/70 capitalize flex items-center gap-2">
+                      <span className={`w-1.5 h-1.5 rounded-full ${index % 2 === 0 ? 'bg-luxury-gold' : 'bg-white/40'}`} />
+                      {key}
+                    </span>
+                    <span className="font-body text-xs font-semibold text-luxury-white">${val.toLocaleString()}</span>
+                  </div>
+                  <div className="w-full h-1 rounded-full bg-black/40 overflow-hidden">
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${(val / totalBudget) * 100}%` }} transition={{ duration: 1, delay: 0.5 + (index * 0.1) }} className={`h-full rounded-full ${index % 2 === 0 ? 'bg-luxury-gold' : 'bg-white/30 group-hover:bg-white/50'} transition-colors`} />
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </motion.aside>
       </div>

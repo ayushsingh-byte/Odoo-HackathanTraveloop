@@ -75,18 +75,22 @@ export default function Navbar() {
 
             {/* Right Actions */}
             <div className="hidden md:flex items-center gap-4">
-              <button className="p-2.5 rounded-full hover:bg-white/5 transition-colors duration-300" aria-label="Search">
-                <Search className="w-4.5 h-4.5 text-white/60" />
-              </button>
+              <Link to="/explore" className="p-2.5 rounded-full hover:bg-white/5 transition-colors duration-300 group" aria-label="Search">
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                  <Search className="w-4.5 h-4.5 text-white/60 group-hover:text-luxury-gold" />
+                </motion.div>
+              </Link>
               <Link
                 to="/profile"
-                className="p-2.5 rounded-full hover:bg-white/5 transition-colors duration-300"
+                className="p-2.5 rounded-full hover:bg-white/5 transition-colors duration-300 group"
                 aria-label="Profile"
               >
-                <User className="w-4.5 h-4.5 text-white/60" />
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                  <User className="w-4.5 h-4.5 text-white/60 group-hover:text-luxury-gold" />
+                </motion.div>
               </Link>
               <Link to="/create-trip" className="btn-primary text-xs py-2.5 px-6">
-                Plan a Trip
+                <motion.span whileHover={{ x: 3 }} className="flex items-center gap-2">Plan a Trip</motion.span>
               </Link>
             </div>
 

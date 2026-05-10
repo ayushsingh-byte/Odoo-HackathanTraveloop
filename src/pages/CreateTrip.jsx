@@ -24,6 +24,7 @@ export default function CreateTrip() {
   const [dest, setDest] = useState('');
   const [mood, setMood] = useState('');
   const [bgImg, setBgImg] = useState('/images/hero-india.png');
+  const [showCustom, setShowCustom] = useState(false);
 
   const steps = ['Destination', 'Travel Style', 'Details'];
 
@@ -61,21 +62,29 @@ export default function CreateTrip() {
                   <p className="font-body text-sm text-white/40">Choose your dream destination</p>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {destOptions.map(d => (
-                    <motion.div key={d.name} whileHover={{ y: -4 }} onClick={() => { setDest(d.name); setBgImg(d.img); }}
-                      className={`relative h-40 rounded-2xl overflow-hidden cursor-pointer border-2 transition-all duration-500 ${
+                  {destOptions.map((d, i) => (
+                    <motion.div key={d.name} whileHover={{ y: -4 }} onClick={() => { setDest(d.name); setBgImg(d.img); setShowCustom(false); }}
+                      className={`relative h-40 rounded-3xl overflow-hidden cursor-pointer border-2 transition-all duration-500 animate-float ${i % 2 === 0 ? '' : 'animation-delay-500'} ${
                         dest === d.name ? 'border-luxury-gold shadow-gold-glow' : 'border-transparent hover:border-white/20'}`}>
-                      <img src={d.img} alt={d.name} className="img-cover" />
+                      <img src={d.img} alt={d.name} className="img-cover object-cover object-center" />
                       <div className="absolute inset-0 bg-black/40" />
                       <div className="absolute inset-0 flex items-center justify-center">
                         <span className="font-display text-xl font-semibold text-luxury-white">{d.name}</span>
                       </div>
-                      {dest === d.name && <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-luxury-gold flex items-center justify-center text-luxury-black text-xs font-bold">✓</div>}
+                      {dest === d.name && <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-luxury-gold flex items-center justify-center text-luxury-black text-xs font-bold shadow-lg">✓</div>}
                     </motion.div>
                   ))}
-                  <motion.div whileHover={{ y: -4 }} className="h-40 rounded-2xl glass flex items-center justify-center cursor-pointer hover:border-luxury-gold/20 transition-all duration-300">
-                    <div className="text-center"><span className="text-2xl block mb-1">+</span><span className="font-body text-xs text-white/40">Custom</span></div>
-                  </motion.div>
+                  {showCustom ? (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="col-span-2 sm:col-span-1 h-40 rounded-3xl glass p-4 flex flex-col justify-center border border-luxury-gold/50 shadow-gold-glow">
+                      <label className="font-body text-[10px] text-white/50 uppercase tracking-wider mb-2 text-center">Custom Destination</label>
+                      <input type="text" value={dest} onChange={(e) => { setDest(e.target.value); setBgImg(''); }} placeholder="Where to?" className="w-full bg-transparent border-b border-white/20 text-center font-display text-xl text-luxury-white focus:outline-none focus:border-luxury-gold pb-1 mb-3" autoFocus />
+                      <button onClick={() => setShowCustom(false)} className="text-[10px] uppercase tracking-widest font-semibold text-luxury-gold hover:text-luxury-white transition-colors">Done</button>
+                    </motion.div>
+                  ) : (
+                    <motion.div whileHover={{ y: -4 }} onClick={() => setShowCustom(true)} className="h-40 rounded-3xl glass flex items-center justify-center cursor-pointer hover:border-luxury-gold/20 transition-all duration-300 animate-float">
+                      <div className="text-center"><span className="text-2xl block mb-1 text-white/60">+</span><span className="font-body text-xs text-white/40">Custom</span></div>
+                    </motion.div>
+                  )}
                 </div>
               </motion.div>
             )}
@@ -87,11 +96,11 @@ export default function CreateTrip() {
                   <p className="font-body text-sm text-white/40">What kind of journey speaks to you?</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto">
-                  {moods.map(m => (
+                  {moods.map((m, i) => (
                     <motion.div key={m.id} whileHover={{ y: -4 }} onClick={() => setMood(m.id)}
-                      className={`glass p-6 rounded-2xl cursor-pointer text-center transition-all duration-500 ${
+                      className={`glass p-6 rounded-3xl cursor-pointer text-center transition-all duration-500 animate-float ${i % 2 === 0 ? '' : 'animation-delay-500'} ${
                         mood === m.id ? 'border-luxury-gold bg-luxury-gold/10 shadow-gold-glow' : 'hover:border-white/20'}`}>
-                      <div className={`mx-auto mb-3 ${mood === m.id ? 'text-luxury-gold' : 'text-white/40'}`}>{m.icon}</div>
+                      <div className={`mx-auto mb-3 flex justify-center ${mood === m.id ? 'text-luxury-gold' : 'text-white/40'}`}>{m.icon}</div>
                       <h3 className="font-body text-sm font-semibold text-luxury-white mb-1">{m.label}</h3>
                       <p className="font-body text-[10px] text-white/40">{m.desc}</p>
                     </motion.div>
@@ -123,14 +132,27 @@ export default function CreateTrip() {
 
           {/* Navigation */}
           <div className="flex items-center justify-between mt-12">
-            <button onClick={() => step > 0 && setStep(step - 1)}
-              className={`flex items-center gap-2 font-body text-sm transition-all duration-300 ${step > 0 ? 'text-white/60 hover:text-luxury-white cursor-pointer' : 'text-white/10 cursor-default'}`}>
+            <motion.button 
+              whileTap={step > 0 ? { scale: 0.95 } : {}}
+              onClick={() => step > 0 && setStep(step - 1)}
+              className={`flex items-center gap-2 font-body text-sm transition-all duration-300 ${step > 0 ? 'text-white/60 hover:text-luxury-white cursor-pointer' : 'text-white/10 cursor-default'}`}
+            >
               <ArrowLeft className="w-4 h-4" /> Back
-            </button>
+            </motion.button>
             {step < 2 ? (
-              <button onClick={() => setStep(step + 1)} className="btn-primary"><span>Continue</span><ArrowRight className="w-4 h-4" /></button>
+              <motion.button 
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setStep(step + 1)} 
+                className="btn-primary"
+              >
+                <span>Continue</span><ArrowRight className="w-4 h-4" />
+              </motion.button>
             ) : (
-              <Link to="/itinerary" className="btn-primary"><Sparkles className="w-4 h-4" />Create Trip</Link>
+              <Link to="/itinerary" className="btn-primary">
+                <motion.span whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />Create Trip
+                </motion.span>
+              </Link>
             )}
           </div>
         </div>

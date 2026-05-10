@@ -15,7 +15,12 @@ const sidebarLinks = [
 ];
 
 export default function AdminDashboard() {
+  const [activeTab, setActiveTab] = useState('Dashboard');
   const { totalUsers, activeTrips, revenue, engagement, recentUsers, monthlyData, topDestinations } = adminStats;
+
+  const handleLogout = () => {
+    window.location.href = '/';
+  };
 
   const stats = [
     { label: 'Total Users', value: totalUsers.toLocaleString(), icon: Users, change: '+12.5%', up: true },
@@ -38,15 +43,27 @@ export default function AdminDashboard() {
         </Link>
         <nav className="flex-1 space-y-1">
           {sidebarLinks.map((link, i) => (
-            <button key={i} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-body text-sm transition-all duration-300 ${
-              link.active ? 'bg-luxury-gold/10 text-luxury-gold border border-luxury-gold/20' : 'text-white/40 hover:text-luxury-white hover:bg-white/5'}`}>
+            <motion.button 
+              key={i} 
+              whileHover={{ x: 5 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setActiveTab(link.label)}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-body text-sm transition-all duration-300 ${
+                activeTab === link.label ? 'bg-luxury-gold/10 text-luxury-gold border border-luxury-gold/20' : 'text-white/40 hover:text-luxury-white hover:bg-white/5'
+              }`}
+            >
               <link.icon className="w-4.5 h-4.5" />{link.label}
-            </button>
+            </motion.button>
           ))}
         </nav>
-        <button className="flex items-center gap-3 px-4 py-3 text-white/30 hover:text-red-400 font-body text-sm transition-colors">
+        <motion.button 
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={handleLogout}
+          className="flex items-center gap-3 px-4 py-3 text-white/30 hover:text-red-400 font-body text-sm transition-colors"
+        >
           <LogOut className="w-4 h-4" /> Logout
-        </button>
+        </motion.button>
       </aside>
 
       {/* Main Content */}
@@ -54,7 +71,7 @@ export default function AdminDashboard() {
         {/* Top Bar */}
         <div className="border-b border-white/5 px-8 py-5 flex items-center justify-between">
           <div>
-            <h1 className="font-display text-2xl font-semibold text-luxury-white">Dashboard</h1>
+            <h1 className="font-display text-2xl font-semibold text-luxury-white">{activeTab}</h1>
             <p className="font-body text-xs text-white/40">Welcome back, Admin</p>
           </div>
           <div className="flex items-center gap-4">

@@ -7,11 +7,11 @@ import DestinationCard from '../components/DestinationCard';
 import { destinations, featuredTrips } from '../data/mockData';
 
 const heroStats = [
-  { icon: '🌏', label: '3 cities', sub: 'in Uttarakhand' },
-  { icon: '📅', label: '10 days', sub: '' },
-  { icon: '📸', label: 'gigabytes', sub: 'of photos' },
-  { icon: '🏔️', label: 'enjoy', sub: 'the views' },
-  { icon: '✨', label: 'feel', sub: 'the peace' },
+  { icon: '🌏', label: '120+', sub: 'destinations' },
+  { icon: '📅', label: '10K+', sub: 'itineraries' },
+  { icon: '📸', label: 'infinite', sub: 'memories' },
+  { icon: '🏔️', label: 'premium', sub: 'experiences' },
+  { icon: '✨', label: 'curated', sub: 'journeys' },
 ];
 
 export default function Home() {
@@ -25,7 +25,7 @@ export default function Home() {
       {/* HERO */}
       <section className="relative h-screen min-h-[700px] overflow-hidden">
         <motion.div style={{ y: heroY, scale: heroScale }} className="absolute inset-0">
-          <img src="/images/hero-dehradun.png" alt="Dehradun" className="img-cover" />
+          <img src="/images/hero-india.png" alt="Explore the World" className="img-cover object-cover object-center" />
         </motion.div>
         <div className="absolute inset-0 overlay-cinematic" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent" />
@@ -34,9 +34,9 @@ export default function Home() {
           <div className="flex-1 flex flex-col justify-center max-w-7xl mx-auto w-full">
             <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.3 }}>
               <span className="font-body text-label uppercase tracking-[0.3em] text-luxury-gold mb-6 block">Premium Travel Planning</span>
-              <h1 className="font-display text-hero text-luxury-white text-shadow-hero mb-6 max-w-4xl">DEHRADUN</h1>
+              <h1 className="font-display text-hero text-luxury-white text-shadow-hero mb-6 max-w-4xl tracking-tight">EXPLORE</h1>
               <p className="font-body text-lg text-white/60 max-w-xl leading-relaxed mb-10">
-                Discover the perfect harmony of serene mountain valleys, ancient temples, and breathtaking landscapes. A journey curated for the extraordinary traveler.
+                Discover the perfect harmony of pristine landscapes, vibrant cultures, and hidden gems. A journey curated for the extraordinary traveler.
               </p>
             </motion.div>
 
@@ -59,7 +59,9 @@ export default function Home() {
 
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1 }} className="absolute right-6 lg:right-12 top-1/2 -translate-y-1/2 hidden lg:flex flex-col gap-4">
             {['◎', '◉', '◈'].map((ic, i) => (
-              <a key={i} href="#" className="w-10 h-10 rounded-full glass flex items-center justify-center text-white/30 hover:text-luxury-gold transition-all duration-300 text-xs">{ic}</a>
+              <motion.div key={i} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <Link to="/explore" className="w-10 h-10 rounded-full glass flex items-center justify-center text-white/30 hover:text-luxury-gold transition-all duration-300 text-xs">{ic}</Link>
+              </motion.div>
             ))}
           </motion.div>
         </motion.div>
