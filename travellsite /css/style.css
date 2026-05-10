@@ -14,11 +14,11 @@ body {
 }
 
 #login-page {
-  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2)), url('../bg_login.png') no-repeat center center/cover;
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2)), url('../bg_register_new.jpeg') no-repeat center center/cover;
 }
 
 #register-page {
-  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2)), url('../bg_register.jpg') no-repeat center center/cover;
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2)), url('../bg_login_new.jpg') no-repeat center center/cover;
 }
 
 @keyframes fadeIn {
@@ -314,31 +314,6 @@ input:focus {
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
   text-align: center;
   animation: slideUp 0.8s ease-out forwards;
-}
-
-.photo-upload {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  border: 2px dashed rgba(255, 255, 255, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 30px;
-  cursor: pointer;
-  background: rgba(0, 0, 0, 0.2);
-  transition: all 0.3s;
-}
-
-.photo-upload span {
-  font-size: 16px;
-  font-family: 'Outfit', sans-serif;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.photo-upload:hover {
-  background: rgba(0, 0, 0, 0.4);
-  border-color: white;
 }
 
 .form-grid {
